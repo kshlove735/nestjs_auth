@@ -5,7 +5,7 @@ import { UpdateTestDto } from './dto/update-test.dto';
 @Injectable()
 export class TestService {
 
-  findAll() {
+  findAll(): string {
     return `This action returns all test`;
   }
 

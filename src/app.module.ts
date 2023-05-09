@@ -1,13 +1,54 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { WinstonModule, utilities as nestWinstonModuleUtilities } from 'nest-winston';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 import { TestModule } from './test/test.module';
-
+import { TypeOrmModule } from '@nestjs/typeorm';
+import * as Joi from 'joi';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: process.env.NODE_ENV == 'dev' ? '.env.dev' : '.env.prod',
+      // 유효성 검사
+      validationSchema: Joi.object({
+        DATABASE_HOST: Joi.string().required(),
+        DATABASE_PORT: Joi.number().required(),
+        DATABASE_USER: Joi.string().required(),
+        DATABASE_PASSWORD: Joi.string().required(),
+        DATABASE_NAME: Joi.string().required(),
+        NODE_ENV: Joi.string()
+          .valid('dev', 'prod')
+          .default('dev'),
+        SQL_LOG: Joi.string().required(),
+        PORT: Joi.number().required()
+      }),
+    })
+    ,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get('DATABASE_HOST'),
+        port: configService.get('DATABASE_PORT'),
+        username: configService.get('DATABASE_USER'),
+        password: configService.get('DATABASE_PASSWORD'),
+        database: configService.get('DATABASE_NAME'),
+        entities: [],
+        synchronize: true,
+        keepConnectionAlive: true,  // 핫 리로드 가능
+        autoLoadEntities: true,     // TypeOrmModule.forFeature를 통해 Entitiy 자동 수집
+        namingStrategy: new SnakeNamingStrategy(),
+        logging: configService.get('SQL_LOG'),
+        bigNumberStrings: false,
+        timezone: '+09:00'
+      })
+    })
+    ,
     WinstonModule.forRoot({
       transports: [
         new winston.transports.Console({
@@ -32,7 +73,7 @@ import { TestModule } from './test/test.module';
             winston.format.timestamp({
               format: 'YYYY-MM-DD HH:mm:ss'
             }),
-            winston.format.printf((info) => {
+            winston.format.printf((info): string => {
               return `${info.timestamp} - ${info.level}, ${info.message} (${info.line})`
             })
           )
@@ -49,7 +90,7 @@ import { TestModule } from './test/test.module';
             winston.format.timestamp({
               format: 'YYYY-MM-DD HH:mm:ss'
             }),
-            winston.format.printf((info) => {
+            winston.format.printf((info): string => {
               return `${info.timestamp} - ${info.level}, ${info.message} (${info.line})`
             })
           )
@@ -65,7 +106,7 @@ import { TestModule } from './test/test.module';
             winston.format.timestamp({
               format: 'YYYY-MM-DD HH:mm:ss'
             }),
-            winston.format.printf((info) => {
+            winston.format.printf((info): string => {
               return `${info.timestamp} - ${info.level}, ${info.message} (${info.line})`
             })
           )

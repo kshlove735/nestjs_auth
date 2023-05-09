@@ -14,15 +14,16 @@ export class TestController {
   @Get()
   findAll(): string {
 
-    try {
+    // try {
 
-      throw new Error('에러 발생')
+    //   throw new Error('에러 발생')
 
-    } catch (err) {
+    // } catch (err) {
 
-      this.logger.error(err, { line: err.stack.split('\n')[1].trim() })
+    //   this.logger.error(err, { line: err.stack.split('\n')[1].trim() })
 
-    }
+    // }
+    console.log(process.env.PORT);
     return this.testService.findAll();
   }
 
