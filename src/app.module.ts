@@ -9,6 +9,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/auth.guard';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -39,7 +43,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
         password: configService.get('DATABASE_PASSWORD'),
         database: configService.get('DATABASE_NAME'),
         entities: [],
-        synchronize: true,
+        synchronize: false,
         keepConnectionAlive: true,  // 핫 리로드 가능
         autoLoadEntities: true,     // TypeOrmModule.forFeature를 통해 Entitiy 자동 수집
         namingStrategy: new SnakeNamingStrategy(),
@@ -113,9 +117,17 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
         }),
       ]
     }),
-    TestModule
+    TestModule,
+    UserModule,
+    AuthModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    }
+  ],
 })
 export class AppModule { }
