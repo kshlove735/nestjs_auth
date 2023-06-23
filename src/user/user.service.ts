@@ -11,7 +11,7 @@ export class UserService {
     private readonly userRepository: UserRepository
   ) { }
 
-  async signUp(createUserDto: CreateUserDto) {
+  async signUp(createUserDto: CreateUserDto): Promise<User> {
 
     // pw 암호화
     await this.transformPw(createUserDto);
