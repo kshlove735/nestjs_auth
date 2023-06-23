@@ -3,6 +3,7 @@ import { UserService } from 'src/user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { User } from 'src/user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class AuthService {
@@ -12,9 +13,8 @@ export class AuthService {
   ) { }
   async signIn(loginDto: LoginDto) {
     const user: User = await this.userService.findUserById(loginDto.id);
-    console.log(user);
-    // TODO : 비밀번호 암호화 및 validate
-    if (user?.pw !== loginDto.pw) {
+
+    if (!user || ! await this.validatePw(loginDto.pw, user.pw)) {
       throw new UnauthorizedException();
     }
 
@@ -23,6 +23,10 @@ export class AuthService {
     return {
       access_token: await this.jwtService.signAsync(payload)
     }
+  }
+
+  async validatePw(pw: string, hashPw: string): Promise<boolean> {
+    return await bcrypt.compare(pw, hashPw);
   }
 
 }
