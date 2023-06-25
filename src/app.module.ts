@@ -28,7 +28,11 @@ import { AuthGuard } from './auth/auth.guard';
           .valid('dev', 'prod')
           .default('dev'),
         SQL_LOG: Joi.string().required(),
-        PORT: Joi.number().required()
+        PORT: Joi.number().required(),
+        JWT_ACCESS_SECRET: Joi.string().required(),
+        JWT_REFRESH_SECRET: Joi.string().required(),
+        JWT_ACCESS_EXPIRATION_TIME: Joi.string().required(),
+        JWT_REFRESH_EXPIRATION_TIME: Joi.string().required(),
       }),
     })
     ,
