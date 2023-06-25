@@ -12,12 +12,23 @@ export class AuthController {
     private readonly userService: UserService
   ) { }
 
+  /**
+   * @description 로그인
+   * @param loginDto 
+   * @param res 
+   * @returns 
+   */
   @Public()
   @Post('auth/login')
   async signIn(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
     return this.authService.signIn(loginDto);
   }
 
+  /**
+   * @description 개인 프로필 출력
+   * @param req
+   * @returns 
+   */
   // @UseGuards(AuthGuard)
   @Get('auth/profile')
   getProfile(@Request() req) {

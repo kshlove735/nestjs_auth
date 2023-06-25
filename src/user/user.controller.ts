@@ -9,6 +9,11 @@ export class UserController {
   constructor(private readonly userService: UserService) { }
 
 
+  /**
+   * @description 회원 가입
+   * @param createUserDto 
+   * @returns 
+   */
   @Public()
   @Post('user/signup')
   async signUp(@Body() createUserDto: CreateUserDto): Promise<User> {
