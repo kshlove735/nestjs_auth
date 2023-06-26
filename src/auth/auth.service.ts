@@ -4,8 +4,10 @@ import { LoginDto } from './dto/login.dto';
 import { User } from 'src/user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt'
-import { Payload } from './interface/payload';
+
 import { ConfigService } from '@nestjs/config';
+import { Payload } from './interface/payload';
+
 
 @Injectable()
 export class AuthService {
@@ -35,10 +37,26 @@ export class AuthService {
   }
 
   async generateRefreshToken(payload: Payload): Promise<string> {
-    return await this.jwtService.signAsync({ id: payload.sub }, {
+    return await this.jwtService.signAsync({ sub: payload.sub }, {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
       expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION_TIME')
     })
+  }
+
+  async refresh(refreshToken: string): Promise<string> {
+    // refresh token이 유효한지 확인
+    const decodedRefreshToken = await this.jwtService.verify(refreshToken, { secret: this.configService.get('JWT_REFRESH_SECRET') }) as Payload;
+    const userId: number = decodedRefreshToken.sub;
+
+    // DB에 저장된 해시된 refresh token과 동일한지
+    const user: User | null = await this.userService.getUserIfRefreshTokenMatches(refreshToken, userId)
+
+    if (!user) throw new UnauthorizedException('Invalid user!');
+
+    // 새로운  access token 생성
+    const payload: Payload = { sub: user.userId, username: user.name, email: user.email }
+    const accessToken: string = await this.generateAccessToken(payload)
+    return accessToken;
   }
 
 }

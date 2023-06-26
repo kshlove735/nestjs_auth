@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Request, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { UserService } from 'src/user/user.service';
-import { Payload } from './interface/payload';
 import { SignInResult } from './interface/sign-in-result';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { Payload } from './interface/payload';
+
+
 
 @Controller()
 export class AuthController {
@@ -49,6 +52,24 @@ export class AuthController {
     }
     return result
   }
+
+
+  @Public()
+  @Post('auth/refresh')
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @Res({ passthrough: true }) res: Response) {
+    try {
+      const newAccessToken: string = await this.authService.refresh(refreshTokenDto.refreshToken)
+      res.setHeader('Authorization', `Bearer ${newAccessToken}`);
+      res.cookie('access_token', newAccessToken, {
+        httpOnly: true,
+      });
+      res.send({ newAccessToken });
+    } catch (e) {
+      throw new UnauthorizedException('Invalid refresh-token');
+    }
+  }
+
+
 
   /**
    * @description 개인 프로필 출력

@@ -13,6 +13,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
+import { JwtService } from '@nestjs/jwt';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -123,10 +124,12 @@ import { AuthGuard } from './auth/auth.guard';
     }),
     TestModule,
     UserModule,
-    AuthModule
+    AuthModule,
+
   ],
   controllers: [AppController],
   providers: [
+    JwtService,
     AppService,
     {
       provide: APP_GUARD,

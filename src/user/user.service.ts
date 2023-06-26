@@ -44,4 +44,15 @@ export class UserService {
     const currentRefreshTokenExp = new Date(currentDate.getTime() + parseInt(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')));
     return currentRefreshTokenExp;
   }
+
+  async getUserIfRefreshTokenMatches(refreshToken: string, userId: number) {
+    const user: User = await this.userRepository.findUserByUserId(userId);
+
+    // DB에 저장된 refresh token 이 없다면 
+    if (!user?.currentRefreshToken) return null;
+
+    const isRefreshTokenMatching: boolean = await bcrypt.compare(refreshToken, user.currentRefreshToken);
+
+    if (isRefreshTokenMatching) return user;
+  }
 }
