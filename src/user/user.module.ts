@@ -13,7 +13,7 @@ import { ConfigService } from '@nestjs/config';
     TypeOrmExModule.forCustomRepository([UserRepository]),
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, ConfigService],
   exports: [UserService]
 })
 export class UserModule { }

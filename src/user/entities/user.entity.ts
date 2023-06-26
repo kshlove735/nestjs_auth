@@ -3,7 +3,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 @Entity()
 export class User {
     @PrimaryGeneratedColumn()
-    userId: string;
+    userId: number;
 
     @Column({ unique: true })
     id: string;
@@ -23,7 +23,10 @@ export class User {
     @Column()
     nickname: string;
 
-    @Column()
-    token: string;
+    @Column({ nullable: true })
+    currentRefreshToken: string;
+
+    @Column({ type: 'datetime', nullable: true })
+    currentRefreshTokenExp: Date
 }
 
