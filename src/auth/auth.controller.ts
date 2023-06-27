@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Res, Request, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Request, UnauthorizedException, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
@@ -7,6 +7,8 @@ import { UserService } from 'src/user/user.service';
 import { SignInResult } from './interface/sign-in-result';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Payload } from './interface/payload';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
 
 
@@ -70,13 +72,24 @@ export class AuthController {
   }
 
 
+  @Public()
+  @Post('auth/logout')
+  @UseGuards(JwtRefreshGuard)
+  async logOut(@Req() req: any, @Res() res: Response) {
+    await this.userService.removeRefreshToken(req.user.userId);
+
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    return res.send({
+      message: 'logout success'
+    })
+  }
 
   /**
    * @description 개인 프로필 출력
    * @param req
    * @returns 
    */
-  // @UseGuards(AuthGuard)
   @Get('auth/profile')
   getProfile(@Request() req) {
     return req.user;

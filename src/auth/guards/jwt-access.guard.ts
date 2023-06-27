@@ -7,7 +7,7 @@ import { Request } from "express";
 import { IS_PUBLIC_KEY } from "src/common/decorator/public.decorator";
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class JwtAccessAuthGuard implements CanActivate {
     constructor(
         private jwtService: JwtService,
         private reflector: Reflector,
@@ -22,12 +22,9 @@ export class AuthGuard implements CanActivate {
 
         if (isPublic) return true;
 
-
-
         const request: Request = context.switchToHttp().getRequest();
         const token: string = this.extractTokenFromHeader(request);
         if (!token) throw new UnauthorizedException();
-
 
         try {
             const payload = await this.jwtService.verifyAsync(token, { secret: this.configService.get('JWT_ACCESS_SECRET') });

@@ -12,8 +12,9 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth/auth.guard';
 import { JwtService } from '@nestjs/jwt';
+import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -133,7 +134,7 @@ import { JwtService } from '@nestjs/jwt';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      useClass: JwtAccessAuthGuard,
     }
   ],
 })

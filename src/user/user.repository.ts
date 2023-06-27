@@ -31,4 +31,11 @@ export class UserRepository extends Repository<User>{
         return await this.findOne({ where: { userId } })
     }
 
+    async removeRefreshToken(userId) {
+        return await this.update(userId, {
+            currentRefreshToken: null,
+            currentRefreshTokenExp: null
+        })
+    }
+
 }

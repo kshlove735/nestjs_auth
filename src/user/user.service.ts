@@ -55,4 +55,8 @@ export class UserService {
 
     if (isRefreshTokenMatching) return user;
   }
+
+  async removeRefreshToken(userId: number) {
+    return await this.userRepository.removeRefreshToken(userId);
+  }
 }
