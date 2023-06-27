@@ -35,17 +35,17 @@ export class UserService {
 
   async setCurrentRefreshToken(userId: number, refreshToken: string): Promise<UpdateResult> {
     const hashedCurrentRefreshToken: string = await this.encrypt(refreshToken);
-    const currentRefreshTokenExp: Date = await this.getCurrentRefreshTokenExp(refreshToken);
+    const currentRefreshTokenExp: Date = await this.getCurrentRefreshTokenExp();
     return await this.userRepository.setCurrentRefreshToken(userId, hashedCurrentRefreshToken, currentRefreshTokenExp);
   }
 
-  async getCurrentRefreshTokenExp(refreshToken: string): Promise<Date> {
+  async getCurrentRefreshTokenExp(): Promise<Date> {
     const currentDate = new Date();
     const currentRefreshTokenExp = new Date(currentDate.getTime() + parseInt(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')));
     return currentRefreshTokenExp;
   }
 
-  async getUserIfRefreshTokenMatches(refreshToken: string, userId: number) {
+  async getUserIfRefreshTokenMatches(refreshToken: string, userId: number): Promise<User> | null {
     const user: User = await this.userRepository.findUserByUserId(userId);
 
     // DB에 저장된 refresh token 이 없다면 
@@ -56,7 +56,7 @@ export class UserService {
     if (isRefreshTokenMatching) return user;
   }
 
-  async removeRefreshToken(userId: number) {
+  async removeRefreshToken(userId: number): Promise<UpdateResult> {
     return await this.userRepository.removeRefreshToken(userId);
   }
 }

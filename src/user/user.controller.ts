@@ -12,7 +12,7 @@ export class UserController {
   /**
    * @description 회원 가입
    * @param createUserDto 
-   * @returns 
+   * @returns User
    */
   @Public()
   @Post('user/signup')

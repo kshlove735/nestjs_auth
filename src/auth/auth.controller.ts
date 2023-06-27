@@ -21,9 +21,9 @@ export class AuthController {
 
   /**
    * @description 로그인
-   * @param loginDto 
+   * @param loginDt
    * @param res 
-   * @returns 
+   * @returns result
    */
   @Public()
   @Post('auth/login')
@@ -56,6 +56,12 @@ export class AuthController {
   }
 
 
+  /**
+   * @description refresh token으로 access token 재 생성
+   * @param refreshTokenDto 
+   * @param res
+  *  @returns {newAccessToken}
+   */
   @Public()
   @Post('auth/refresh')
   async refresh(@Body() refreshTokenDto: RefreshTokenDto, @Res({ passthrough: true }) res: Response) {
@@ -72,6 +78,12 @@ export class AuthController {
   }
 
 
+  /**
+   * @description : 로그아웃
+   * @param req 
+   * @param res 
+   * @returns {message: 'logout success'}
+   */
   @Public()
   @Post('auth/logout')
   @UseGuards(JwtRefreshGuard)
