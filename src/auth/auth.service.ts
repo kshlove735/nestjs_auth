@@ -22,7 +22,7 @@ export class AuthService {
     if (!user) throw new NotFoundException('User not found');
     if (! await this.validatePw(loginDto.pw, user.pw)) throw new BadRequestException('Invalid credentials');
 
-    const payload: Payload = { sub: user.userId, username: user.name, email: user.email }
+    const payload: Payload = { sub: user.userId, username: user.name, email: user.email, role: user.role }
 
     return payload;
   }
@@ -44,7 +44,7 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string): Promise<string> {
-    // refresh token이 유효한지 확인
+    // refresh token이 유효한 token인지 확인
     const decodedRefreshToken = await this.jwtService.verify(refreshToken, { secret: this.configService.get('JWT_REFRESH_SECRET') }) as Payload;
     const userId: number = decodedRefreshToken.sub;
 
@@ -54,7 +54,7 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Invalid user!');
 
     // 새로운  access token 생성
-    const payload: Payload = { sub: user.userId, username: user.name, email: user.email }
+    const payload: Payload = { sub: user.userId, username: user.name, email: user.email, role: user.role }
     const accessToken: string = await this.generateAccessToken(payload)
     return accessToken;
   }

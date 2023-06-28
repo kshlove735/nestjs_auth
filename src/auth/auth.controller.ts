@@ -7,10 +7,10 @@ import { UserService } from 'src/user/user.service';
 import { SignInResult } from './interface/sign-in-result';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Payload } from './interface/payload';
-import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-
-
+import { RoleGuard } from './guards/role.guard';
+import { Role } from 'src/common/decorator/role.decorator';
+import { RoleType } from 'src/user/enum/role-type.enum';
 
 @Controller()
 export class AuthController {
@@ -102,6 +102,8 @@ export class AuthController {
    * @param req
    * @returns 
    */
+  @UseGuards(RoleGuard)
+  @Role(RoleType.USER)
   @Get('auth/profile')
   getProfile(@Request() req) {
     return req.user;
