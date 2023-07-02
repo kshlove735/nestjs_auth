@@ -57,7 +57,7 @@ export class AuthController {
 
 
   /**
-   * @description refresh token으로 access token 재 생성
+   * @description refresh token으로 access token 재생성
    * @param refreshTokenDto 
    * @param res
   *  @returns {newAccessToken}
