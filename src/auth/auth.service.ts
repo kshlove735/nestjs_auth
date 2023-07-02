@@ -7,6 +7,8 @@ import * as bcrypt from 'bcrypt'
 
 import { ConfigService } from '@nestjs/config';
 import { Payload } from './interface/payload';
+import { UserRepository } from 'src/user/user.repository';
+import { UserExculdedFromCriticalInfoDto } from '../user/dto/user-exculded-from-critical-info.dto';
 
 
 @Injectable()
@@ -16,47 +18,54 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly configService: ConfigService
   ) { }
-  async validateUser(loginDto: LoginDto): Promise<Payload> {
+  async validateUser(loginDto: LoginDto): Promise<User> {
     const user: User = await this.userService.findUserById(loginDto.id);
 
     if (!user) throw new NotFoundException('User not found');
     if (! await this.validatePw(loginDto.pw, user.pw)) throw new BadRequestException('Invalid credentials');
 
-    const payload: Payload = { sub: user.userId, username: user.name, email: user.email, role: user.role }
-
-    return payload;
+    return user;
   }
 
   async validatePw(pw: string, hashPw: string): Promise<boolean> {
     return await bcrypt.compare(pw, hashPw);
   }
 
-  async generateAccessToken(payload: Payload): Promise<string> {
-    // JwtModule에서 동적으로 옵션 설정 지정
-    return await this.jwtService.signAsync(payload);
-  }
-
-  async generateRefreshToken(payload: Payload): Promise<string> {
-    return await this.jwtService.signAsync({ sub: payload.sub }, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
-      expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION_TIME')
-    })
-  }
-
-  async refresh(refreshToken: string): Promise<string> {
-    // refresh token이 유효한 token인지 확인
-    const decodedRefreshToken = await this.jwtService.verify(refreshToken, { secret: this.configService.get('JWT_REFRESH_SECRET') }) as Payload;
-    const userId: number = decodedRefreshToken.sub;
-
-    // DB에 저장된 해시된 refresh token과 동일한지
-    const user: User | null = await this.userService.getUserIfRefreshTokenMatches(refreshToken, userId)
-
-    if (!user) throw new UnauthorizedException('Invalid user!');
-
-    // 새로운  access token 생성
+  async generateAccessToken(user: User) {
     const payload: Payload = { sub: user.userId, username: user.name, email: user.email, role: user.role }
-    const accessToken: string = await this.generateAccessToken(payload)
-    return accessToken;
+    // JwtModule에서 동적으로 옵션 설정 지정
+    const token: string = await this.jwtService.signAsync(payload)
+    return {
+      accessToken: token,
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      maxAge: Number(this.configService.get('JWT_ACCESS_EXPIRATION_TIME')) * 1000
+    }
   }
+
+  async generateRefreshToken(user: User) {
+    const payload = { sub: user.userId }
+    const token: string = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get('JWT_REFRESH_SECRET'),
+      expiresIn: `${this.configService.get('JWT_REFRESH_EXPIRATION_TIME')}s`
+    })
+    return {
+      refreshToken: token,
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      maxAge: Number(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')) * 1000
+    }
+
+  }
+
+  // async refresh(user: User) {
+
+  //   // 새로운  access token 생성
+  //   const payload: Payload = { sub: user.userId, username: user.name, email: user.email, role: user.role }
+  //   const accessToken: string = await this.generateAccessToken(payload)
+  //   return accessToken;
+  // }
 
 }

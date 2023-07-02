@@ -11,6 +11,8 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { RoleGuard } from './guards/role.guard';
 import { Role } from 'src/common/decorator/role.decorator';
 import { RoleType } from 'src/user/enum/role-type.enum';
+import { User } from 'src/user/entities/user.entity';
+import { UserExculdedFromCriticalInfoDto } from '../user/dto/user-exculded-from-critical-info.dto';
 
 @Controller()
 export class AuthController {
@@ -27,30 +29,27 @@ export class AuthController {
    */
   @Public()
   @Post('auth/login')
-  async signIn(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<SignInResult> {
+  async signIn(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
 
     // DB에 저장된 암호호된 비밀번호와 동일한지 확인
-    const payload: Payload = await this.authService.validateUser(loginDto);
+    const user: User = await this.authService.validateUser(loginDto);
 
     // 토근 생성
-    const accessToken: string = await this.authService.generateAccessToken(payload);
-    const refreshToken: string = await this.authService.generateRefreshToken(payload);
+    const { accessToken, ...accessOption } = await this.authService.generateAccessToken(user);
+    const { refreshToken, ...refreshOption } = await this.authService.generateRefreshToken(user);
 
     // DB에 refresh token 저장
-    await this.userService.setCurrentRefreshToken(payload.sub, refreshToken);
+    await this.userService.setCurrentRefreshToken(user.userId, refreshToken);
 
     res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
-    res.cookie('access_token', accessToken, {
-      httpOnly: true,
-    });
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-    })
+    res.cookie('access_token', accessToken, accessOption);
+    res.cookie('refresh_token', refreshToken, refreshOption)
 
-    const result: SignInResult = {
+    const userExculdedFromCriticalInfo: UserExculdedFromCriticalInfoDto = this.userService.getUserExculdedFromCriticalInfo(user);
+
+    const result = {
       message: 'login success',
-      accessToken,
-      refreshToken
+      user: userExculdedFromCriticalInfo
     }
     return result
   }
@@ -60,18 +59,19 @@ export class AuthController {
    * @description refresh token으로 access token 재생성
    * @param refreshTokenDto 
    * @param res
-  *  @returns {newAccessToken}
+  *  @returns {accessToken}
    */
   @Public()
   @Post('auth/refresh')
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @Res({ passthrough: true }) res: Response) {
+  @UseGuards(JwtRefreshGuard)
+  async refresh(@Req() req: any, @Res({ passthrough: true }) res: Response) {
     try {
-      const newAccessToken: string = await this.authService.refresh(refreshTokenDto.refreshToken)
-      res.setHeader('Authorization', `Bearer ${newAccessToken}`);
-      res.cookie('access_token', newAccessToken, {
-        httpOnly: true,
-      });
-      res.send({ newAccessToken });
+      const user: User = req.user;
+      const userExculdedFromCriticalInfo: UserExculdedFromCriticalInfoDto = this.userService.getUserExculdedFromCriticalInfo(user);
+      const { accessToken, ...accessOption } = await this.authService.generateAccessToken(user)
+      res.setHeader('Authorization', `Bearer ${accessToken}`);
+      res.cookie('access_token', accessToken, accessOption);
+      res.send({ user: userExculdedFromCriticalInfo });
     } catch (e) {
       throw new UnauthorizedException('Invalid refresh-token');
     }

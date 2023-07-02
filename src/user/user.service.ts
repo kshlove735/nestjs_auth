@@ -5,6 +5,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt'
 import { ConfigService } from '@nestjs/config';
 import { UpdateResult } from 'typeorm';
+import { UserExculdedFromCriticalInfoDto } from './dto/user-exculded-from-critical-info.dto';
 
 @Injectable()
 export class UserService {
@@ -41,7 +42,7 @@ export class UserService {
 
   async getCurrentRefreshTokenExp(): Promise<Date> {
     const currentDate = new Date();
-    const currentRefreshTokenExp = new Date(currentDate.getTime() + parseInt(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')));
+    const currentRefreshTokenExp = new Date(currentDate.getTime() + (Number(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')) * 1000));
     return currentRefreshTokenExp;
   }
 
@@ -58,5 +59,10 @@ export class UserService {
 
   async removeRefreshToken(userId: number): Promise<UpdateResult> {
     return await this.userRepository.removeRefreshToken(userId);
+  }
+
+  getUserExculdedFromCriticalInfo(user: User): UserExculdedFromCriticalInfoDto {
+    const { pw, currentRefreshToken, currentRefreshTokenExp, ...userExculdedFromCriticalInfo } = user;
+    return userExculdedFromCriticalInfo;
   }
 }

@@ -2,7 +2,6 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
-import { error } from "console";
 import { Request } from "express";
 import { IS_PUBLIC_KEY } from "src/common/decorator/public.decorator";
 
@@ -39,11 +38,11 @@ export class JwtAccessAuthGuard implements CanActivate {
 
     private extractTokenFromHeader(request: Request): string | undefined {
         //* request header의 authorization로 access token 전달할 때
-        const [type, token] = request.headers.authorization?.split(' ') ?? [];
-        return type === 'Bearer' ? token : undefined
+        // const [type, token] = request.headers.authorization?.split(' ') ?? [];
+        // return type === 'Bearer' ? token : undefined
 
         //* cookie로 access token 전달할 때
-        // const token = request.cookies['access_token'];
-        // return token
+        const token = request.cookies['access_token'];
+        return token
     }
 }
