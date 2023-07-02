@@ -1,3 +1,4 @@
+import { number } from "joi";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { RoleType } from "../enum/role-type.enum";
 
@@ -9,25 +10,25 @@ export class User {
     @Column({ unique: true })
     id: string;
 
-    @Column()
+    @Column({ type: "varchar", length: 80 })
     pw: string;
 
-    @Column()
+    @Column({ type: "varchar", length: 50 })
     name: string;
 
-    @Column()
+    @Column({ type: "varchar", length: 50 })
     role: RoleType;
 
-    @Column()
+    @Column({ type: "varchar", length: 50 })
     email: string;
 
-    @Column()
+    @Column({ type: "varchar", length: 50 })
     nickname: string;
 
-    @Column({ nullable: true })
-    currentRefreshToken: string;
+    @Column({ type: "varchar", length: 80, nullable: true })
+    currentRefreshToken?: string;
 
     @Column({ type: 'datetime', nullable: true })
-    currentRefreshTokenExp: Date
+    currentRefreshTokenExp?: Date
 }
 
