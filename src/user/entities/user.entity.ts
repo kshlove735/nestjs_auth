@@ -25,7 +25,7 @@ export class User {
     role: RoleType;
 
     @IsEmail()
-    @Column({ type: "varchar", length: 50 })
+    @Column({ type: "varchar", length: 50, unique: true })
     email: string;
 
     @IsString()

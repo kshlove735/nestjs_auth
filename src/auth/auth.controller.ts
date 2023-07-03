@@ -4,9 +4,9 @@ import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { UserService } from 'src/user/user.service';
-import { SignInResult } from './interface/sign-in-result';
+import { SignInResult } from './interface/sign-in-result.interface';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { Payload } from './interface/payload';
+import { Payload } from './interface/payload.interface';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { RoleGuard } from './guards/role.guard';
 import { Role } from 'src/common/decorator/role.decorator';
@@ -29,7 +29,7 @@ export class AuthController {
    */
   @Public()
   @Post('auth/login')
-  async signIn(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async signIn(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<SignInResult> {
 
     // DB에 저장된 암호호된 비밀번호와 동일한지 확인
     const user: User = await this.authService.validateUser(loginDto);
@@ -47,7 +47,7 @@ export class AuthController {
 
     const userExculdedFromCriticalInfo: UserExculdedFromCriticalInfoDto = this.userService.getUserExculdedFromCriticalInfo(user);
 
-    const result = {
+    const result: SignInResult = {
       message: 'login success',
       user: userExculdedFromCriticalInfo
     }
@@ -64,7 +64,7 @@ export class AuthController {
   @Public()
   @Post('auth/refresh')
   @UseGuards(JwtRefreshGuard)
-  async refresh(@Req() req: any, @Res({ passthrough: true }) res: Response) {
+  async refresh(@Req() req: any, @Res({ passthrough: true }) res: Response): Promise<void> {
     try {
       const user: User = req.user;
       const userExculdedFromCriticalInfo: UserExculdedFromCriticalInfoDto = this.userService.getUserExculdedFromCriticalInfo(user);
@@ -87,14 +87,12 @@ export class AuthController {
   @Public()
   @Post('auth/logout')
   @UseGuards(JwtRefreshGuard)
-  async logOut(@Req() req: any, @Res() res: Response) {
+  async logOut(@Req() req: any, @Res() res: Response): Promise<void> {
     await this.userService.removeRefreshToken(req.user.userId);
 
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
-    return res.send({
-      message: 'logout success'
-    })
+    res.send({ message: 'logout success' })
   }
 
   /**

@@ -6,9 +6,11 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt'
 
 import { ConfigService } from '@nestjs/config';
-import { Payload } from './interface/payload';
+import { Payload } from './interface/payload.interface';
 import { UserRepository } from 'src/user/user.repository';
 import { UserExculdedFromCriticalInfoDto } from '../user/dto/user-exculded-from-critical-info.dto';
+import { AccessTokenWithOption } from './interface/access-token-with-option.interface';
+import { RefreshTokenWithOption } from './interface/refresh-token-with-option.interface';
 
 
 @Injectable()
@@ -31,7 +33,7 @@ export class AuthService {
     return await bcrypt.compare(pw, hashPw);
   }
 
-  async generateAccessToken(user: User) {
+  async generateAccessToken(user: User): Promise<AccessTokenWithOption> {
     const payload: Payload = { sub: user.userId, username: user.name, email: user.email, role: user.role }
     // JwtModule에서 동적으로 옵션 설정 지정
     const token: string = await this.jwtService.signAsync(payload)
@@ -44,7 +46,7 @@ export class AuthService {
     }
   }
 
-  async generateRefreshToken(user: User) {
+  async generateRefreshToken(user: User): Promise<RefreshTokenWithOption> {
     const payload = { sub: user.userId }
     const token: string = await this.jwtService.signAsync(payload, {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
