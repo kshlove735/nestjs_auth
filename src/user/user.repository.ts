@@ -27,11 +27,11 @@ export class UserRepository extends Repository<User>{
         })
     }
 
-    async findUserByUserId(userId: number) {
+    async findUserByUserId(userId: number): Promise<User> {
         return await this.findOne({ where: { userId } })
     }
 
-    async removeRefreshToken(userId) {
+    async removeRefreshToken(userId: number): Promise<UpdateResult> {
         return await this.update(userId, {
             currentRefreshToken: null,
             currentRefreshTokenExp: null
