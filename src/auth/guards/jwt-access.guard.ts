@@ -26,6 +26,7 @@ export class JwtAccessAuthGuard implements CanActivate {
         if (!token) throw new UnauthorizedException();
 
         try {
+            // 토근 유효성 검증
             const payload = await this.jwtService.verifyAsync(token, { secret: this.configService.get('JWT_ACCESS_SECRET') });
 
             request['user'] = payload;
