@@ -20,6 +20,10 @@ export class UserRepository extends Repository<User>{
         return await this.findOne({ where: { id: id } })
     }
 
+    async findUserByEmail(email: string): Promise<User> {
+        return await this.findOne({ where: { email: email } })
+    }
+
     async setCurrentRefreshToken(userId: number, hashedCurrentRefreshToken: string, currentRefreshTokenExp: Date): Promise<UpdateResult> {
         return await this.update(userId, {
             currentRefreshToken: hashedCurrentRefreshToken,

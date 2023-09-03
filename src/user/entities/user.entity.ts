@@ -1,7 +1,13 @@
-import { IsDate, IsEmail, IsString } from "class-validator";
-import { number } from "joi";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { IsDate, IsEmail, IsOptional, IsString } from "class-validator";
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { RoleType } from "../enum/role-type.enum";
+import { Exclude } from "class-transformer";
+import * as bcrypt from 'bcrypt';
+
+export enum Provider {
+    Local,
+    Google
+}
 
 @Entity()
 export class User {
@@ -12,9 +18,11 @@ export class User {
     @Column({ unique: true })
     id: string;
 
+    // @Exclude({ toPlainOnly: true })
+    @IsOptional()
     @IsString()
-    @Column({ type: "varchar", length: 80 })
-    pw: string;
+    @Column({ type: "varchar", length: 80, nullable: true })
+    pw?: string;
 
     @IsString()
     @Column({ type: "varchar", length: 50 })
@@ -39,5 +47,22 @@ export class User {
     @IsDate()
     @Column({ type: 'datetime', nullable: true })
     currentRefreshTokenExp?: Date
+
+    @Column({ nullable: true })
+    @IsOptional()
+    @IsString()
+    photo?: string;
+
+    @Column({ type: 'enum', enum: Provider, default: Provider.Local })
+    provider: Provider;
+
+    // @BeforeInsert()
+    // @BeforeUpdate()
+    // private async hashPassword() {
+    //     if (this.pw && this.provider === Provider.Local && this.tempPw !== this.pw) {
+    //         this.pw = await bycrpt.hash(this.pw, 10);
+    //     }
+    // }
+
 }
 

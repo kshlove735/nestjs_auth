@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Res, Request, UnauthorizedException, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, UnauthorizedException, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { UserService } from 'src/user/user.service';
 import { SignInResult } from './interface/sign-in-result.interface';
@@ -13,6 +13,8 @@ import { Role } from 'src/common/decorator/role.decorator';
 import { RoleType } from 'src/user/enum/role-type.enum';
 import { User } from 'src/user/entities/user.entity';
 import { UserExculdedFromCriticalInfoDto } from '../user/dto/user-exculded-from-critical-info.dto';
+import { GoogleRequest } from './interface/auth.interface';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller()
 export class AuthController {
@@ -103,9 +105,20 @@ export class AuthController {
   @UseGuards(RoleGuard)
   @Role(RoleType.USER)
   @Get('auth/profile')
-  getProfile(@Request() req) {
+  getProfile(@Req() req) {
     return req.user;
   }
 
+  @Public()
+  @Get()
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Req() _req: any) { }
+
+
+  @Public()
+  @Post('auth/google')
+  async googleLogin(@Req() req: GoogleRequest, @Res({ passthrough: true }) res: Response) {
+    return await this.authService.googleLogin(req, res);
+  }
 
 }
