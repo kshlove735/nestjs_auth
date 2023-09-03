@@ -110,14 +110,17 @@ export class AuthController {
   }
 
   @Public()
-  @Get()
+  @Get('auth/google')
   @UseGuards(AuthGuard('google'))
   async googleAuth(@Req() _req: any) { }
 
 
   @Public()
-  @Post('auth/google')
+  @Get('auth/google/callback')
+  @UseGuards(AuthGuard('google'))
   async googleLogin(@Req() req: GoogleRequest, @Res({ passthrough: true }) res: Response) {
+    console.log('얌');
+
     return await this.authService.googleLogin(req, res);
   }
 

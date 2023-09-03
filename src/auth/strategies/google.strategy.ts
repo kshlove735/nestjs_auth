@@ -12,8 +12,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
             clientSecret: configService.get('GOOGLE_SECRET'),
             // 구글 인증을 마치고 다시 돌아올 주소 입력.
             // 구글 앱을 구성하면서 사용자 인증 정보를 구성할때 입력한 Redirect URI값과 일치해야한다.
-            callbackURL: 'http:loaclhost:3000/auth/google/callback',
-            scope: ['email, profile'],
+            callbackURL: 'http://localhost:3000/auth/google/callback',
+            scope: ['email', 'profile'],
         });
     }
 
@@ -29,6 +29,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     // 인증을 마치면 user를 구성해 반환하고 인증 오류가 발생하면 error를 전달
     async validate(accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) {
         try {
+            console.log('validate')
             const { name, emails, photos } = profile;
             const user = {
                 email: emails[0].value,
