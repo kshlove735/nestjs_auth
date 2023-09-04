@@ -92,9 +92,10 @@ export class AuthService {
       // 유저 생성
       if (!findUser) {
         let name = `${lastName} ${firstName}`;
-        const googleUser = this.userRepository.create({ email, name, photo, provider: Provider.Google });
-        console.log(googleUser);
-        await this.userRepository.createUser(googleUser);
+        let id = email;
+        let nickname = email;
+        let googleUser = this.userRepository.create({ id, email, name, nickname, photo, provider: Provider.Google });
+        googleUser = await this.userRepository.createUser(googleUser);
 
         // 생성된 구글 유저로부터 accessToken & refreshToken 발급
         const { accessToken, ...accessOption } = await this.generateAccessToken(googleUser);
