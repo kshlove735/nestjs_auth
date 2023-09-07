@@ -25,11 +25,18 @@ export class JwtAccessAuthGuard implements CanActivate {
         const token: string = this.extractTokenFromHeader(request);
         if (!token) throw new UnauthorizedException();
 
+        let payload;
+        // provider에 따른 토근 유효성 검증
         try {
-            // 토근 유효성 검증
-            const payload = await this.jwtService.verifyAsync(token, { secret: this.configService.get('JWT_ACCESS_SECRET') });
+            const provider: string = this.jwtService.decode(token)['provider']
+            if (provider === 'Local') {
+                payload = await this.jwtService.verifyAsync(token, { secret: this.configService.get('JWT_ACCESS_SECRET') });
 
+            } else if (provider === 'Google') {
+                payload = await this.jwtService.verifyAsync(token, { secret: this.configService.get('GOOGLE_SECRET') });
+            }
             request['user'] = payload;
+            // console.log(payload);
         } catch (e) {
             throw new UnauthorizedException(e.message);
         }

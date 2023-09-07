@@ -15,6 +15,7 @@ import { GoogleRequest } from './interface/auth.interface';
 import { Response } from 'express';
 import { ConflictException } from "@nestjs/common";
 import { SignInResult } from './interface/sign-in-result.interface';
+import { ContextIdFactory } from '@nestjs/core';
 
 
 @Injectable()
@@ -39,7 +40,7 @@ export class AuthService {
   }
 
   async generateAccessToken(user: User): Promise<AccessTokenWithOption> {
-    const payload: Payload = { sub: user.userId, role: user.role }
+    const payload: Payload = { sub: user.userId, role: user.role, provider: user.provider }
     // JwtModule에서 동적으로 옵션 설정 지정
     const token: string = await this.jwtService.signAsync(payload)
     return {
@@ -67,70 +68,44 @@ export class AuthService {
 
   }
 
-  // async refresh(user: User) {
-
-  //   // 새로운  access token 생성
-  //   const payload: Payload = { sub: user.userId, username: user.name, email: user.email, role: user.role }
-  //   const accessToken: string = await this.generateAccessToken(payload)
-  //   return accessToken;
-  // }
 
   async googleLogin(req: GoogleRequest, res: Response) {
     try {
       const {
-        user: { email, firstName, lastName, photo },
+        user: { email, name, photo },
       } = req;
-      // let accessToken: AccessTokenWithOption;
-      // let refreshToken: RefreshTokenWithOption;
 
-      // 유저 중복 검사
-      const findUser = await this.userRepository.findUserByEmail(email);
-      if (findUser && findUser.provider === Provider.Local) {
-        throw new ConflictException('Existing Email')
+      let id: string = email;
+      let nickname: string = name;
+
+      // 유저 중복 검사 및 유저 회원 가입
+      const findUser = await this.userRepository.findOneOrCreate(
+        { where: { email } },
+        { id, email, name, nickname, photo, provider: Provider.Google }
+      )
+
+      if (findUser && findUser.provider !== Provider.Google) {
+        throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
       }
 
-      // 유저 생성
-      if (!findUser) {
-        let name = `${lastName} ${firstName}`;
-        let id = email;
-        let nickname = email;
-        let googleUser = this.userRepository.create({ id, email, name, nickname, photo, provider: Provider.Google });
-        googleUser = await this.userRepository.createUser(googleUser);
-
-        // 생성된 구글 유저로부터 accessToken & refreshToken 발급
-        const { accessToken, ...accessOption } = await this.generateAccessToken(googleUser);
-        const { refreshToken, ...refreshOption } = await this.generateRefreshToken(googleUser);
-        res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
-        res.cookie('access_token', accessToken, accessOption);
-        res.cookie('refresh_token', refreshToken, refreshOption)
-
-        await this.userService.setCurrentRefreshToken(googleUser.userId, refreshToken);
-
-        const userExculdedFromCriticalInfo: UserExculdedFromCriticalInfoDto = this.userService.getUserExculdedFromCriticalInfo(googleUser);
-        const result: SignInResult = {
-          message: 'login success',
-          user: userExculdedFromCriticalInfo
-        }
-        return result
-      }
-
-      // 구글 가입이 되어 있는 경우
+      // 생성된 구글 유저로부터 accessToken & refreshToken 발급
       const { accessToken, ...accessOption } = await this.generateAccessToken(findUser);
       const { refreshToken, ...refreshOption } = await this.generateRefreshToken(findUser);
       res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
       res.cookie('access_token', accessToken, accessOption);
-      res.cookie('refresh_token', refreshToken, refreshOption)
-
+      res.cookie('refresh_token', refreshToken, refreshOption);
       await this.userService.setCurrentRefreshToken(findUser.userId, refreshToken);
 
       const userExculdedFromCriticalInfo: UserExculdedFromCriticalInfoDto = this.userService.getUserExculdedFromCriticalInfo(findUser);
       const result: SignInResult = {
-        message: 'login success',
+        message: '로그인 성공',
         user: userExculdedFromCriticalInfo
       }
-      return result
+      return result;
+
+
     } catch (error) {
-      return { ok: false, error: '구글 로그인 인증을 실패하였습니다.' };
+      throw new Error(error);
     }
   }
 

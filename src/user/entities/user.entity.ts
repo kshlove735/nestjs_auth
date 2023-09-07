@@ -5,8 +5,8 @@ import { Exclude } from "class-transformer";
 import * as bcrypt from 'bcrypt';
 
 export enum Provider {
-    Local,
-    Google
+    Local = 'Local',
+    Google = 'Google',
 }
 
 @Entity()

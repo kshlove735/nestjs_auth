@@ -3,8 +3,7 @@ import { Request } from "express";
 // Google Strategy
 type GooleUser = {
     email: string;
-    firstName: string;
-    lastName: string;
+    name: string;
     photo: string;
 }
 
