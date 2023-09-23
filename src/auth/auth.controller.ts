@@ -13,7 +13,7 @@ import { Role } from 'src/common/decorator/role.decorator';
 import { RoleType } from 'src/user/enum/role-type.enum';
 import { User } from 'src/user/entities/user.entity';
 import { UserExculdedFromCriticalInfoDto } from '../user/dto/user-exculded-from-critical-info.dto';
-import { GoogleRequest } from './interface/auth.interface';
+import { GoogleRequest, KakaoRequest } from './interface/auth.interface';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller()
@@ -120,6 +120,19 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleLogin(@Req() req: GoogleRequest, @Res({ passthrough: true }) res: Response) {
     return await this.authService.googleLogin(req, res);
+  }
+
+  @Public()
+  @Get('auth/kakao')
+  @UseGuards(AuthGuard('kakao'))
+  async kakaoAuth(@Req() _req: any) { }
+
+
+  @Public()
+  @Get('auth/kakao/callback')
+  @UseGuards(AuthGuard('kakao'))
+  async kakaoLogin(@Req() req: KakaoRequest, @Res({ passthrough: true }) res: Response) {
+    return await this.authService.kakaoLogin(req, res);
   }
 
 }

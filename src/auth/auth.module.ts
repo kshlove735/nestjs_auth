@@ -11,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { TypeOrmExModule } from 'src/common/module/typeorm.module';
 import { UserRepository } from 'src/user/user.repository';
+import { KakaoStrategy } from './strategies/kakao.strategy';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { UserRepository } from 'src/user/user.repository';
     })
   ],
   controllers: [AuthController],
-  providers: [AuthService, ConfigService, JwtRefreshStrategy, GoogleStrategy], //* JwtRefreshStrategy 기억하자
+  providers: [AuthService, ConfigService, JwtRefreshStrategy, GoogleStrategy, KakaoStrategy], //* JwtRefreshStrategy 기억하자
   exports: [AuthService]
 })
 export class AuthModule { }

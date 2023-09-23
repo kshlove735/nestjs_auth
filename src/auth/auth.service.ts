@@ -4,18 +4,16 @@ import { LoginDto } from './dto/login.dto';
 import { Provider, User } from 'src/user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt'
-
 import { ConfigService } from '@nestjs/config';
 import { Payload } from './interface/payload.interface';
 import { UserRepository } from 'src/user/user.repository';
 import { UserExculdedFromCriticalInfoDto } from '../user/dto/user-exculded-from-critical-info.dto';
 import { AccessTokenWithOption } from './interface/access-token-with-option.interface';
 import { RefreshTokenWithOption } from './interface/refresh-token-with-option.interface';
-import { GoogleRequest } from './interface/auth.interface';
+import { GoogleRequest, KakaoRequest } from './interface/auth.interface';
 import { Response } from 'express';
 import { ConflictException } from "@nestjs/common";
 import { SignInResult } from './interface/sign-in-result.interface';
-import { ContextIdFactory } from '@nestjs/core';
 
 
 @Injectable()
@@ -89,6 +87,47 @@ export class AuthService {
       }
 
       // 생성된 구글 유저로부터 accessToken & refreshToken 발급
+      const { accessToken, ...accessOption } = await this.generateAccessToken(findUser);
+      const { refreshToken, ...refreshOption } = await this.generateRefreshToken(findUser);
+      res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
+      res.cookie('access_token', accessToken, accessOption);
+      res.cookie('refresh_token', refreshToken, refreshOption);
+      await this.userService.setCurrentRefreshToken(findUser.userId, refreshToken);
+
+      const userExculdedFromCriticalInfo: UserExculdedFromCriticalInfoDto = this.userService.getUserExculdedFromCriticalInfo(findUser);
+      const result: SignInResult = {
+        message: '로그인 성공',
+        user: userExculdedFromCriticalInfo
+      }
+      return result;
+
+
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async kakaoLogin(req: KakaoRequest, res: Response) {
+    try {
+      let {
+        user: { email, nickname, photo },
+      } = req;
+
+      let id: string = email;
+      let name: string = nickname;
+
+
+      // 유저 중복 검사 및 유저 회원 가입
+      const findUser = await this.userRepository.findOneOrCreate(
+        { where: { email } },
+        { id, email, name, nickname, photo, provider: Provider.Kakako }
+      )
+
+      if (findUser && findUser.provider !== Provider.Kakako) {
+        throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
+      }
+
+      // 생성된 카카오 유저로부터 accessToken & refreshToken 발급
       const { accessToken, ...accessOption } = await this.generateAccessToken(findUser);
       const { refreshToken, ...refreshOption } = await this.generateRefreshToken(findUser);
       res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);

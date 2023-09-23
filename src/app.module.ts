@@ -37,7 +37,7 @@ import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
         JWT_REFRESH_EXPIRATION_TIME: Joi.string().required(),
         GOOGLE_CLIENT_ID: Joi.string().required(),
         GOOGLE_SECRET: Joi.string().required(),
-
+        KAKAO_CLIENT_ID: Joi.string().required(),
       }),
     })
     ,

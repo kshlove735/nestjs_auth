@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 export enum Provider {
     Local = 'Local',
     Google = 'Google',
+    Kakako = 'Kakako',
 }
 
 @Entity()
@@ -24,9 +25,10 @@ export class User {
     @Column({ type: "varchar", length: 80, nullable: true })
     pw?: string;
 
+    @IsOptional()
     @IsString()
-    @Column({ type: "varchar", length: 50 })
-    name: string;
+    @Column({ type: "varchar", length: 50, nullable: true })
+    name?: string;
 
     @IsString()
     @Column({ type: "varchar", length: 50 })
