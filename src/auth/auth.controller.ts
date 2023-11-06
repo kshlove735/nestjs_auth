@@ -26,10 +26,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Controller()
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly authService: AuthService, private readonly userService: UserService) {}
 
   /**
    * @description 로그인
@@ -40,18 +37,13 @@ export class AuthController {
   @Public()
   @UseInterceptors(ClassSerializerInterceptor)
   @Post('auth/login')
-  async signIn(
-    @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<SignInResult> {
+  async signIn(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<SignInResult> {
     // DB에 저장된 암호호된 비밀번호와 동일한지 확인
     const user: User = await this.authService.validateUser(loginDto);
 
     // 토근 생성
-    const { accessToken, ...accessOption } =
-      await this.authService.generateAccessToken(user);
-    const { refreshToken, ...refreshOption } =
-      await this.authService.generateRefreshToken(user);
+    const { accessToken, ...accessOption } = await this.authService.generateAccessToken(user);
+    const { refreshToken, ...refreshOption } = await this.authService.generateRefreshToken(user);
 
     // DB에 refresh token 저장
     await this.userService.setCurrentRefreshToken(user.userId, refreshToken);
@@ -77,14 +69,10 @@ export class AuthController {
   @Post('auth/refresh')
   @UseInterceptors(ClassSerializerInterceptor)
   @UseGuards(JwtRefreshGuard)
-  async refresh(
-    @Req() req: any,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
+  async refresh(@Req() req: any, @Res({ passthrough: true }) res: Response): Promise<void> {
     try {
       const user: User = req.user;
-      const { accessToken, ...accessOption } =
-        await this.authService.generateAccessToken(user);
+      const { accessToken, ...accessOption } = await this.authService.generateAccessToken(user);
       res.setHeader('Authorization', `Bearer ${accessToken}`);
       res.cookie('access_token', accessToken, accessOption);
       res.send({ user });
@@ -131,10 +119,7 @@ export class AuthController {
   @Public()
   @Get('auth/google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleLogin(
-    @Req() req: GoogleRequest,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<SignInResult> {
+  async googleLogin(@Req() req: GoogleRequest, @Res({ passthrough: true }) res: Response): Promise<SignInResult> {
     return await this.authService.googleLogin(req, res);
   }
 
@@ -147,10 +132,7 @@ export class AuthController {
   @Public()
   @Get('auth/kakao/callback')
   @UseGuards(AuthGuard('kakao'))
-  async kakaoLogin(
-    @Req() req: KakaoRequest,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<SignInResult> {
+  async kakaoLogin(@Req() req: KakaoRequest, @Res({ passthrough: true }) res: Response): Promise<SignInResult> {
     return await this.authService.kakaoLogin(req, res);
   }
 }

@@ -11,10 +11,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { JwtAccessAuthGuard } from './common/guards/jwt-access.guard';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { AllExceptionsFilter } from './common/exceptions/all-exception.filter';
 
 @Module({
   imports: [
@@ -135,6 +136,10 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     {
       provide: APP_GUARD,
       useClass: JwtAccessAuthGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
   ],
 })
