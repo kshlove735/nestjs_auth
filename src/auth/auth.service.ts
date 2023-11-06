@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { Provider, User } from 'src/user/entities/user.entity';
@@ -31,8 +26,7 @@ export class AuthService {
     const user: User = await this.userService.findUserById(loginDto.id);
 
     if (!user) throw new NotFoundException('User not found');
-    if (!(await this.validatePw(loginDto.pw, user.pw)))
-      throw new BadRequestException('Invalid credentials');
+    if (!(await this.validatePw(loginDto.pw, user.pw))) throw new BadRequestException('Invalid credentials');
 
     return user;
   }
@@ -54,8 +48,7 @@ export class AuthService {
       domain: 'localhost',
       path: '/',
       httpOnly: true,
-      maxAge:
-        Number(this.configService.get('JWT_ACCESS_EXPIRATION_TIME')) * 1000,
+      maxAge: Number(this.configService.get('JWT_ACCESS_EXPIRATION_TIME')) * 1000,
     };
   }
 
@@ -70,8 +63,7 @@ export class AuthService {
       domain: 'localhost',
       path: '/',
       httpOnly: true,
-      maxAge:
-        Number(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')) * 1000,
+      maxAge: Number(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')) * 1000,
     };
   }
 
@@ -91,27 +83,17 @@ export class AuthService {
       );
 
       if (findUser && findUser.provider !== Provider.Google) {
-        throw new ConflictException(
-          '현재 계정으로 가입한 이메일이 존재합니다.',
-        );
+        throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
       }
 
       // 생성된 구글 유저로부터 accessToken & refreshToken 발급
-      const { accessToken, ...accessOption } = await this.generateAccessToken(
-        findUser,
-      );
-      const { refreshToken, ...refreshOption } =
-        await this.generateRefreshToken(findUser);
+      const { accessToken, ...accessOption } = await this.generateAccessToken(findUser);
+      const { refreshToken, ...refreshOption } = await this.generateRefreshToken(findUser);
       res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
       res.cookie('access_token', accessToken, accessOption);
       res.cookie('refresh_token', refreshToken, refreshOption);
-      await this.userService.setCurrentRefreshToken(
-        findUser.userId,
-        refreshToken,
-      );
+      await this.userService.setCurrentRefreshToken(findUser.userId, refreshToken);
 
-      // const userExculdedFromCriticalInfo: UserExculdedFromCriticalInfoDto =
-      //   this.userService.getUserExculdedFromCriticalInfo(findUser);
       const result: SignInResult = {
         message: '로그인 성공',
         user: findUser,
@@ -138,24 +120,16 @@ export class AuthService {
       );
 
       if (findUser && findUser.provider !== Provider.Kakako) {
-        throw new ConflictException(
-          '현재 계정으로 가입한 이메일이 존재합니다.',
-        );
+        throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
       }
 
       // 생성된 카카오 유저로부터 accessToken & refreshToken 발급
-      const { accessToken, ...accessOption } = await this.generateAccessToken(
-        findUser,
-      );
-      const { refreshToken, ...refreshOption } =
-        await this.generateRefreshToken(findUser);
+      const { accessToken, ...accessOption } = await this.generateAccessToken(findUser);
+      const { refreshToken, ...refreshOption } = await this.generateRefreshToken(findUser);
       res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
       res.cookie('access_token', accessToken, accessOption);
       res.cookie('refresh_token', refreshToken, refreshOption);
-      await this.userService.setCurrentRefreshToken(
-        findUser.userId,
-        refreshToken,
-      );
+      await this.userService.setCurrentRefreshToken(findUser.userId, refreshToken);
 
       const result: SignInResult = {
         message: '로그인 성공',
