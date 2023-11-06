@@ -13,7 +13,8 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
+import { JwtAccessAuthGuard } from './common/guards/jwt-access.guard';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -26,9 +27,7 @@ import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
         DATABASE_USER: Joi.string().required(),
         DATABASE_PASSWORD: Joi.string().required(),
         DATABASE_NAME: Joi.string().required(),
-        NODE_ENV: Joi.string()
-          .valid('dev', 'prod')
-          .default('dev'),
+        NODE_ENV: Joi.string().valid('dev', 'prod').default('dev'),
         SQL_LOG: Joi.string().required(),
         PORT: Joi.number().required(),
         JWT_ACCESS_SECRET: Joi.string().required(),
@@ -39,8 +38,7 @@ import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
         GOOGLE_SECRET: Joi.string().required(),
         KAKAO_CLIENT_ID: Joi.string().required(),
       }),
-    })
-    ,
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -53,15 +51,14 @@ import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
         database: configService.get('DATABASE_NAME'),
         entities: [],
         synchronize: false,
-        keepConnectionAlive: true,  // 핫 리로드 가능
-        autoLoadEntities: true,     // TypeOrmModule.forFeature를 통해 Entitiy 자동 수집
+        keepConnectionAlive: true, // 핫 리로드 가능
+        autoLoadEntities: true, // TypeOrmModule.forFeature를 통해 Entity 자동 수집
         namingStrategy: new SnakeNamingStrategy(),
         logging: configService.get('SQL_LOG'),
         bigNumberStrings: false,
-        timezone: '+09:00'
-      })
-    })
-    ,
+        timezone: '+09:00',
+      }),
+    }),
     WinstonModule.forRoot({
       transports: [
         new winston.transports.Console({
@@ -71,8 +68,8 @@ import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
             nestWinstonModuleUtilities.format.nestLike('Nest', {
               colors: true,
               prettyPrint: true,
-            })
-          )
+            }),
+          ),
         }),
         new winston.transports.DailyRotateFile({
           level: 'error',
@@ -84,12 +81,12 @@ import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
           zippedArchive: false,
           format: winston.format.combine(
             winston.format.timestamp({
-              format: 'YYYY-MM-DD HH:mm:ss'
+              format: 'YYYY-MM-DD HH:mm:ss',
             }),
             winston.format.printf((info): string => {
-              return `${info.timestamp} - ${info.level}, ${info.message} (${info.line})`
-            })
-          )
+              return `${info.timestamp} - ${info.level}, ${info.message} (${info.line})`;
+            }),
+          ),
         }),
         new winston.transports.DailyRotateFile({
           level: 'info',
@@ -101,13 +98,14 @@ import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
           zippedArchive: false,
           format: winston.format.combine(
             winston.format.timestamp({
-              format: 'YYYY-MM-DD HH:mm:ss'
+              format: 'YYYY-MM-DD HH:mm:ss',
             }),
             winston.format.printf((info): string => {
-              return `${info.timestamp} - ${info.level}, ${info.message} (${info.line})`
-            })
-          )
-        }), new winston.transports.DailyRotateFile({
+              return `${info.timestamp} - ${info.level}, ${info.message} (${info.line})`;
+            }),
+          ),
+        }),
+        new winston.transports.DailyRotateFile({
           level: 'debug',
           datePattern: 'YYYY-MM-DD',
           dirname: 'logs/debug',
@@ -117,19 +115,18 @@ import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
           zippedArchive: false,
           format: winston.format.combine(
             winston.format.timestamp({
-              format: 'YYYY-MM-DD HH:mm:ss'
+              format: 'YYYY-MM-DD HH:mm:ss',
             }),
             winston.format.printf((info): string => {
-              return `${info.timestamp} - ${info.level}, ${info.message} (${info.line})`
-            })
-          )
+              return `${info.timestamp} - ${info.level}, ${info.message} (${info.line})`;
+            }),
+          ),
         }),
-      ]
+      ],
     }),
     TestModule,
     UserModule,
     AuthModule,
-
   ],
   controllers: [AppController],
   providers: [
@@ -138,7 +135,7 @@ import { JwtAccessAuthGuard } from './auth/guards/jwt-access.guard';
     {
       provide: APP_GUARD,
       useClass: JwtAccessAuthGuard,
-    }
+    },
   ],
 })
-export class AppModule { }
+export class AppModule {}

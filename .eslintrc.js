@@ -17,9 +17,12 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
+    // 줄바꿈 120 적용을 위해 해당 부분 추가
+    'prettier/prettier': ['error', { printWidth: 120, endOfLine: 'off' }],
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    // 'newline-per-chained-call': ['error', { ignoreChainWithDepth: 5 }],
   },
 };

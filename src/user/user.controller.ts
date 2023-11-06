@@ -6,17 +6,16 @@ import { User } from './entities/user.entity';
 
 @Controller()
 export class UserController {
-  constructor(private readonly userService: UserService) { }
-
+  constructor(private readonly userService: UserService) {}
 
   /**
    * @description 회원 가입
-   * @param createUserDto 
+   * @param createUserDto
    * @returns User
    */
   @Public()
   @Post('user/signup')
   async signUp(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return await this.userService.signUp(createUserDto)
+    return await this.userService.signUp(createUserDto);
   }
 }

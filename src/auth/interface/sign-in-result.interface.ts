@@ -1,6 +1,6 @@
-import { UserExculdedFromCriticalInfoDto } from "src/user/dto/user-exculded-from-critical-info.dto";
+import { User } from 'src/user/entities/user.entity';
 
 export interface SignInResult {
-    message: string,
-    user: UserExculdedFromCriticalInfoDto
+  message: string;
+  user: User;
 }
