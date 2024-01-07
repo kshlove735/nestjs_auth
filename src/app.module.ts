@@ -16,6 +16,7 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtAccessAuthGuard } from './common/guards/jwt-access.guard';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { AllExceptionsFilter } from './common/exceptions/all-exception.filter';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -51,7 +52,7 @@ import { AllExceptionsFilter } from './common/exceptions/all-exception.filter';
         password: configService.get('DATABASE_PASSWORD'),
         database: configService.get('DATABASE_NAME'),
         entities: [],
-        synchronize: false,
+        synchronize: true,
         keepConnectionAlive: true, // 핫 리로드 가능
         autoLoadEntities: true, // TypeOrmModule.forFeature를 통해 Entity 자동 수집
         namingStrategy: new SnakeNamingStrategy(),
@@ -128,6 +129,7 @@ import { AllExceptionsFilter } from './common/exceptions/all-exception.filter';
     TestModule,
     UserModule,
     AuthModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [

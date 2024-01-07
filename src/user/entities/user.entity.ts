@@ -1,14 +1,9 @@
 import { IsDate, IsEmail, IsOptional, IsString } from 'class-validator';
-import {
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RoleType } from '../enum/role-type.enum';
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
+import { File } from 'src/file/entities/file.entity';
 
 export enum Provider {
   Local = 'Local',
@@ -63,6 +58,9 @@ export class User {
 
   @Column({ type: 'enum', enum: Provider, default: Provider.Local })
   provider: Provider;
+
+  @OneToMany(() => File, (file) => file.user)
+  files: File[];
 
   // @BeforeInsert()
   // @BeforeUpdate()
