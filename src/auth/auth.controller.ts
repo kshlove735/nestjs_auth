@@ -30,7 +30,7 @@ export class AuthController {
 
   /**
    * @description 로그인
-   * @param loginDt
+   * @param loginDto
    * @param res
    * @returns result
    */
