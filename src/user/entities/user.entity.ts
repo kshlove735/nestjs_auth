@@ -1,14 +1,14 @@
-import { IsDate, IsEmail, IsOptional, IsString } from 'class-validator';
-import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { IsDate, IsEmail, IsOptional } from 'class-validator';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RoleType } from '../enum/role-type.enum';
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
 import { File } from 'src/file/entities/file.entity';
 
 export enum Provider {
-  Local = 'Local',
-  Google = 'Google',
-  Kakako = 'Kakako',
+  LOCAL = 'LOCAL',
+  GOOGLE = 'GOOGLE',
+  KAKAO = 'KAKAO',
 }
 
 @Entity()
@@ -16,34 +16,27 @@ export class User {
   @PrimaryGeneratedColumn()
   userId: number;
 
-  @IsString()
   @Column({ unique: true })
   id: string;
 
   @Exclude()
-  @IsOptional()
-  @IsString()
   @Column({ type: 'varchar', length: 80, nullable: true })
   pw?: string;
 
   @IsOptional()
-  @IsString()
   @Column({ type: 'varchar', length: 50, nullable: true })
   name?: string;
 
-  @IsString()
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'enum', enum: RoleType, default: RoleType.USER })
   role: RoleType;
 
   @IsEmail()
   @Column({ type: 'varchar', length: 50, unique: true })
   email: string;
 
-  @IsString()
   @Column({ type: 'varchar', length: 50 })
   nickname: string;
 
-  @IsString()
   @Column({ type: 'varchar', length: 80, nullable: true })
   currentRefreshToken?: string;
 
@@ -53,10 +46,9 @@ export class User {
 
   @Column({ nullable: true })
   @IsOptional()
-  @IsString()
   photo?: string;
 
-  @Column({ type: 'enum', enum: Provider, default: Provider.Local })
+  @Column({ type: 'enum', enum: Provider, default: Provider.LOCAL })
   provider: Provider;
 
   @OneToMany(() => File, (file) => file.user)

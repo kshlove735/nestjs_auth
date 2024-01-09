@@ -3,19 +3,10 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Public } from 'src/common/decorator/public.decorator';
 import { User } from './entities/user.entity';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('User')
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
-  /**
-   * @description 회원 가입
-   * @param createUserDto
-   * @returns User
-   */
-  @Public()
-  @Post('user/signup')
-  async signUp(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return await this.userService.signUp(createUserDto);
-  }
 }

@@ -23,20 +23,26 @@ import { RoleType } from 'src/user/enum/role-type.enum';
 import { User } from 'src/user/entities/user.entity';
 import { GoogleRequest, KakaoRequest } from './interface/auth.interface';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags } from '@nestjs/swagger';
+import { SignupResDto } from './dto/res.dto';
+import { SignupReqDto } from './dto/req.dto';
+import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 
+@ApiTags('Auth')
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService, private readonly userService: UserService) {}
 
-  /**
-   * @description 로그인
-   * @param loginDto
-   * @param res
-   * @returns result
-   */
+  @Public()
+  @ApiPostResponse(SignupResDto)
+  @Post('user/signup')
+  async signUp(@Body() { id, pw, name, role, email, nickname, photo, provider }: SignupReqDto): Promise<SignupResDto> {
+    return await this.authService.signup(id, pw, name, role, email, nickname, photo, provider);
+  }
+
   @Public()
   @UseInterceptors(ClassSerializerInterceptor)
-  @Post('auth/login')
+  @Post('auth/signin')
   async signIn(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<SignInResult> {
     // DB에 저장된 암호호된 비밀번호와 동일한지 확인
     const user: User = await this.authService.validateUser(loginDto);
@@ -59,12 +65,6 @@ export class AuthController {
     return result;
   }
 
-  /**
-   * @description refresh token으로 access token 재생성
-   * @param refreshTokenDto
-   * @param res
-   *  @returns {accessToken}
-   */
   @Public()
   @Post('auth/refresh')
   @UseInterceptors(ClassSerializerInterceptor)
@@ -81,12 +81,6 @@ export class AuthController {
     }
   }
 
-  /**
-   * @description : 로그아웃
-   * @param req
-   * @param res
-   * @returns {message: 'logout success'}
-   */
   @Public()
   @Post('auth/logout')
   @UseGuards(JwtRefreshGuard)
@@ -98,11 +92,6 @@ export class AuthController {
     res.send({ message: 'logout success' });
   }
 
-  /**
-   * @description 개인 프로필 출력
-   * @param req
-   * @returns
-   */
   @UseGuards(RoleGuard)
   @Role(RoleType.USER)
   @Get('auth/profile')

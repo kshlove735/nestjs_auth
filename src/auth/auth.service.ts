@@ -13,6 +13,8 @@ import { GoogleRequest, KakaoRequest } from './interface/auth.interface';
 import { Response } from 'express';
 import { ConflictException } from '@nestjs/common';
 import { SignInResult } from './interface/sign-in-result.interface';
+import { RoleType } from 'src/user/enum/role-type.enum';
+import { SignupResDto } from './dto/res.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,23 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
+
+  async signup(
+    id: string,
+    pw: string,
+    name: string,
+    role: RoleType,
+    email: string,
+    nickname: string,
+    photo: string,
+    provider: Provider,
+  ): Promise<SignupResDto> {
+    // 비밀번호 암호화
+    const hashedPw: string = await this.encrypt(pw);
+
+    // User 정보 DB에 저장
+    return await this.userRepository.createUser({ id, pw: hashedPw, name, role, email, nickname, photo, provider });
+  }
   async validateUser(loginDto: LoginDto): Promise<User> {
     const user: User = await this.userService.findUserById(loginDto.id);
 
@@ -79,10 +98,10 @@ export class AuthService {
       // 유저 중복 검사 및 유저 회원 가입
       const findUser = await this.userRepository.findOneOrCreate(
         { where: { email } },
-        { id, email, name, nickname, photo, provider: Provider.Google },
+        { id, email, name, nickname, photo, provider: Provider.GOOGLE },
       );
 
-      if (findUser && findUser.provider !== Provider.Google) {
+      if (findUser && findUser.provider !== Provider.GOOGLE) {
         throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
       }
 
@@ -116,10 +135,10 @@ export class AuthService {
       // 유저 중복 검사 및 유저 회원 가입
       const findUser = await this.userRepository.findOneOrCreate(
         { where: { email } },
-        { id, email, name, nickname, photo, provider: Provider.Kakako },
+        { id, email, name, nickname, photo, provider: Provider.KAKAO },
       );
 
-      if (findUser && findUser.provider !== Provider.Kakako) {
+      if (findUser && findUser.provider !== Provider.KAKAO) {
         throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
       }
 
@@ -139,5 +158,10 @@ export class AuthService {
     } catch (error) {
       throw new Error(error);
     }
+  }
+
+  private async encrypt(plainText: string): Promise<string> {
+    const salt: string = await bcrypt.genSalt();
+    return await bcrypt.hash(plainText, salt);
   }
 }
