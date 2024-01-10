@@ -21,8 +21,8 @@ async function bootstrap() {
     },
   };
 
-  const documnet = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, documnet, customOption);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document, customOption);
 
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
