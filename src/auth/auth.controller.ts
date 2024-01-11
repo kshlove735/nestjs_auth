@@ -11,7 +11,6 @@ import {
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { UserService } from 'src/user/user.service';
@@ -23,12 +22,13 @@ import { RoleType } from 'src/user/enum/role-type.enum';
 import { User } from 'src/user/entities/user.entity';
 import { GoogleRequest, KakaoRequest } from './interface/auth.interface';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags } from '@nestjs/swagger';
-import { SignupResDto } from './dto/res.dto';
-import { SignupReqDto } from './dto/req.dto';
+import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
+import { SigninResDto, SignupResDto } from './dto/res.dto';
+import { SigninReqDto, SignupReqDto } from './dto/req.dto';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 
 @ApiTags('Auth')
+@ApiExtraModels(SignupResDto, SigninResDto)
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService, private readonly userService: UserService) {}
@@ -36,33 +36,14 @@ export class AuthController {
   @Public()
   @ApiPostResponse(SignupResDto)
   @Post('user/signup')
-  async signUp(@Body() { id, pw, name, role, email, nickname, photo, provider }: SignupReqDto): Promise<SignupResDto> {
+  async signup(@Body() { id, pw, name, role, email, nickname, photo, provider }: SignupReqDto): Promise<SignupResDto> {
     return await this.authService.signup(id, pw, name, role, email, nickname, photo, provider);
   }
 
   @Public()
-  @UseInterceptors(ClassSerializerInterceptor)
   @Post('auth/signin')
-  async signIn(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<SignInResult> {
-    // DB에 저장된 암호호된 비밀번호와 동일한지 확인
-    const user: User = await this.authService.validateUser(loginDto);
-
-    // 토근 생성
-    const { accessToken, ...accessOption } = await this.authService.generateAccessToken(user);
-    const { refreshToken, ...refreshOption } = await this.authService.generateRefreshToken(user);
-
-    // DB에 refresh token 저장
-    await this.userService.setCurrentRefreshToken(user.userId, refreshToken);
-
-    res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
-    res.cookie('access_token', accessToken, accessOption);
-    res.cookie('refresh_token', refreshToken, refreshOption);
-
-    const result: SignInResult = {
-      message: 'login success',
-      user,
-    };
-    return result;
+  async signin(@Body() { id, pw }: SigninReqDto, @Res({ passthrough: true }) res: Response): Promise<SigninResDto> {
+    return await this.authService.signin(id, pw, res);
   }
 
   @Public()

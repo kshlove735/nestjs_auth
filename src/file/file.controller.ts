@@ -6,7 +6,6 @@ import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { SignupResDto } from 'src/auth/dto/res.dto';
 
 @ApiTags('file')
-@ApiExtraModels(SignupResDto)
 @Controller('file')
 export class FileController {
   constructor(private readonly fileService: FileService) {}

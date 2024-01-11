@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString, Matches } from 'class-validator';
 import { Provider } from 'src/user/entities/user.entity';
 import { RoleType } from 'src/user/enum/role-type.enum';
 
@@ -9,6 +9,7 @@ export class SignupReqDto {
   id: string;
 
   @IsString()
+  @Matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{6,30}$/)
   @ApiProperty({ required: true, example: 'User1!' })
   pw: string;
 
@@ -40,4 +41,15 @@ export class SignupReqDto {
   @IsEnum(Provider)
   @ApiPropertyOptional({ example: 'LOCAL' })
   provider?: Provider = Provider.LOCAL;
+}
+
+export class SigninReqDto {
+  @IsString()
+  @ApiProperty({ required: true, example: 'user1' })
+  id: string;
+
+  @IsString()
+  @Matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{6,30}$/)
+  @ApiProperty({ required: true, example: 'User1!' })
+  pw: string;
 }

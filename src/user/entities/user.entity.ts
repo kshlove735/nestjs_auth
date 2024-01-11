@@ -1,8 +1,6 @@
 import { IsDate, IsEmail, IsOptional } from 'class-validator';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RoleType } from '../enum/role-type.enum';
-import { Exclude } from 'class-transformer';
-import * as bcrypt from 'bcrypt';
 import { File } from 'src/file/entities/file.entity';
 
 export enum Provider {
@@ -19,7 +17,6 @@ export class User {
   @Column({ unique: true })
   id: string;
 
-  @Exclude()
   @Column({ type: 'varchar', length: 80, nullable: true })
   pw?: string;
 

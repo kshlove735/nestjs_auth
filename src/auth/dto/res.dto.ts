@@ -28,3 +28,11 @@ export class SignupResDto {
   @ApiProperty({ required: true })
   provider: Provider = Provider.LOCAL;
 }
+
+export class SigninResDto {
+  @ApiProperty({ required: true })
+  accessToken: string;
+
+  @ApiProperty({ required: true })
+  refreshToken: string;
+}

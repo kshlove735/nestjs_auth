@@ -14,7 +14,7 @@ import { Response } from 'express';
 import { ConflictException } from '@nestjs/common';
 import { SignInResult } from './interface/sign-in-result.interface';
 import { RoleType } from 'src/user/enum/role-type.enum';
-import { SignupResDto } from './dto/res.dto';
+import { SigninResDto, SignupResDto } from './dto/res.dto';
 
 @Injectable()
 export class AuthService {
@@ -41,11 +41,33 @@ export class AuthService {
     // User 정보 DB에 저장
     return await this.userRepository.createUser({ id, pw: hashedPw, name, role, email, nickname, photo, provider });
   }
-  async validateUser(loginDto: LoginDto): Promise<User> {
-    const user: User = await this.userService.findUserById(loginDto.id);
+
+  async signin(id: string, pw: string, res: Response): Promise<SigninResDto> {
+    // DB에 저장된 암호호된 비밀번호와 동일한지 확인
+    const user: User = await this.validateUser(id, pw);
+
+    // 토근 생성
+    const { accessToken, ...accessOption } = await this.generateAccessToken(user);
+    const { refreshToken, ...refreshOption } = await this.generateRefreshToken(user);
+
+    // DB에 refresh token 저장
+    await this.userService.setCurrentRefreshToken(user.userId, refreshToken);
+
+    res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
+    res.cookie('access_token', accessToken, accessOption);
+    res.cookie('refresh_token', refreshToken, refreshOption);
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async validateUser(id: string, pw: string): Promise<User> {
+    const user: User = await this.userService.findUserById(id);
 
     if (!user) throw new NotFoundException('User not found');
-    if (!(await this.validatePw(loginDto.pw, user.pw))) throw new BadRequestException('Invalid credentials');
+    if (!(await this.validatePw(pw, user.pw))) throw new BadRequestException('Invalid credentials');
 
     return user;
   }
