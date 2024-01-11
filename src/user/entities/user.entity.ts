@@ -1,4 +1,3 @@
-import { IsDate, IsEmail, IsOptional } from 'class-validator';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RoleType } from '../enum/role-type.enum';
 import { File } from 'src/file/entities/file.entity';
@@ -20,14 +19,12 @@ export class User {
   @Column({ type: 'varchar', length: 80, nullable: true })
   pw?: string;
 
-  @IsOptional()
   @Column({ type: 'varchar', length: 50, nullable: true })
   name?: string;
 
   @Column({ type: 'enum', enum: RoleType, default: RoleType.USER })
   role: RoleType;
 
-  @IsEmail()
   @Column({ type: 'varchar', length: 50, unique: true })
   email: string;
 
@@ -37,12 +34,10 @@ export class User {
   @Column({ type: 'varchar', length: 80, nullable: true })
   currentRefreshToken?: string;
 
-  @IsDate()
   @Column({ type: 'datetime', nullable: true })
   currentRefreshTokenExp?: Date;
 
   @Column({ nullable: true })
-  @IsOptional()
   photo?: string;
 
   @Column({ type: 'enum', enum: Provider, default: Provider.LOCAL })
