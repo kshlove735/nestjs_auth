@@ -1,37 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
-import { ConfigService } from '@nestjs/config';
-import { UpdateResult } from 'typeorm';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository, private readonly configService: ConfigService) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async findUserById(id: string): Promise<User> {
     return await this.userRepository.findUserById(id);
-  }
-
-  // TODO :  auth service에 적용했다. 추후 삭제 필요
-  async encrypt(plainText: string): Promise<string> {
-    const salt: string = await bcrypt.genSalt();
-    return await bcrypt.hash(plainText, salt);
-  }
-
-  async setCurrentRefreshToken(userId: number, refreshToken: string): Promise<UpdateResult> {
-    const hashedCurrentRefreshToken: string = await this.encrypt(refreshToken);
-    const currentRefreshTokenExp: Date = await this.getCurrentRefreshTokenExp();
-    return await this.userRepository.setCurrentRefreshToken(userId, hashedCurrentRefreshToken, currentRefreshTokenExp);
-  }
-
-  async getCurrentRefreshTokenExp(): Promise<Date> {
-    const currentDate = new Date();
-    const currentRefreshTokenExp = new Date(
-      currentDate.getTime() + Number(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')) * 1000,
-    );
-    return currentRefreshTokenExp;
   }
 
   async getUserIfRefreshTokenMatches(refreshToken: string, userId: number): Promise<User> | null {
@@ -43,9 +20,5 @@ export class UserService {
     const isRefreshTokenMatching: boolean = await bcrypt.compare(refreshToken, user.currentRefreshToken);
 
     if (isRefreshTokenMatching) return user;
-  }
-
-  async removeRefreshToken(userId: number): Promise<UpdateResult> {
-    return await this.userRepository.removeRefreshToken(userId);
   }
 }

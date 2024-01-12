@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { LoginDto } from './dto/login.dto';
 import { Provider, User } from 'src/user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -14,7 +13,8 @@ import { Response } from 'express';
 import { ConflictException } from '@nestjs/common';
 import { SignInResult } from './interface/sign-in-result.interface';
 import { RoleType } from 'src/user/enum/role-type.enum';
-import { SigninResDto, SignupResDto } from './dto/res.dto';
+import { RefreshResDto, SigninResDto, SignupResDto } from './dto/res.dto';
+import { UpdateResult } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -51,9 +51,9 @@ export class AuthService {
     const { refreshToken, ...refreshOption } = await this.generateRefreshToken(user);
 
     // DB에 refresh token 저장
-    await this.userService.setCurrentRefreshToken(user.userId, refreshToken);
+    await this.setCurrentRefreshToken(user.userId, refreshToken);
 
-    res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
+    res.setHeader('Authorization', `Bearer ${accessToken}`);
     res.cookie('access_token', accessToken, accessOption);
     res.cookie('refresh_token', refreshToken, refreshOption);
 
@@ -63,7 +63,19 @@ export class AuthService {
     };
   }
 
-  async validateUser(id: string, pw: string): Promise<User> {
+  async refresh(user: User, res: Response): Promise<RefreshResDto> {
+    const { accessToken, ...accessOption } = await this.generateAccessToken(user);
+    res.setHeader('Authorization', `Bearer ${accessToken}`);
+    res.cookie('access_token', accessToken, accessOption);
+
+    return { accessToken };
+  }
+
+  async removeRefreshToken(userId: number): Promise<void> {
+    await this.userRepository.removeRefreshToken(userId);
+  }
+
+  private async validateUser(id: string, pw: string): Promise<User> {
     const user: User = await this.userService.findUserById(id);
 
     if (!user) throw new NotFoundException('User not found');
@@ -72,11 +84,11 @@ export class AuthService {
     return user;
   }
 
-  async validatePw(pw: string, hashPw: string): Promise<boolean> {
+  private async validatePw(pw: string, hashPw: string): Promise<boolean> {
     return await bcrypt.compare(pw, hashPw);
   }
 
-  async generateAccessToken(user: User): Promise<AccessTokenWithOption> {
+  private async generateAccessToken(user: User): Promise<AccessTokenWithOption> {
     const payload: Payload = {
       sub: user.userId,
       role: user.role,
@@ -93,7 +105,7 @@ export class AuthService {
     };
   }
 
-  async generateRefreshToken(user: User): Promise<RefreshTokenWithOption> {
+  private async generateRefreshToken(user: User): Promise<RefreshTokenWithOption> {
     const payload = { sub: user.userId };
     const token: string = await this.jwtService.signAsync(payload, {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
@@ -133,7 +145,7 @@ export class AuthService {
       res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
       res.cookie('access_token', accessToken, accessOption);
       res.cookie('refresh_token', refreshToken, refreshOption);
-      await this.userService.setCurrentRefreshToken(findUser.userId, refreshToken);
+      await this.setCurrentRefreshToken(findUser.userId, refreshToken);
 
       const result: SignInResult = {
         message: '로그인 성공',
@@ -170,7 +182,7 @@ export class AuthService {
       res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
       res.cookie('access_token', accessToken, accessOption);
       res.cookie('refresh_token', refreshToken, refreshOption);
-      await this.userService.setCurrentRefreshToken(findUser.userId, refreshToken);
+      await this.setCurrentRefreshToken(findUser.userId, refreshToken);
 
       const result: SignInResult = {
         message: '로그인 성공',
@@ -185,5 +197,19 @@ export class AuthService {
   private async encrypt(plainText: string): Promise<string> {
     const salt: string = await bcrypt.genSalt();
     return await bcrypt.hash(plainText, salt);
+  }
+
+  private async setCurrentRefreshToken(userId: number, refreshToken: string): Promise<UpdateResult> {
+    const hashedCurrentRefreshToken: string = await this.encrypt(refreshToken);
+    const currentRefreshTokenExp: Date = await this.getCurrentRefreshTokenExp();
+    return await this.userRepository.setCurrentRefreshToken(userId, hashedCurrentRefreshToken, currentRefreshTokenExp);
+  }
+
+  private async getCurrentRefreshTokenExp(): Promise<Date> {
+    const currentDate = new Date();
+    const currentRefreshTokenExp = new Date(
+      currentDate.getTime() + Number(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')) * 1000,
+    );
+    return currentRefreshTokenExp;
   }
 }

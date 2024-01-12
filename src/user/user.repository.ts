@@ -52,8 +52,8 @@ export class UserRepository extends Repository<User> {
     return await this.findOne({ where: { userId } });
   }
 
-  async removeRefreshToken(userId: number): Promise<UpdateResult> {
-    return await this.update(userId, {
+  async removeRefreshToken(userId: number): Promise<void> {
+    await this.update(userId, {
       currentRefreshToken: null,
       currentRefreshTokenExp: null,
     });

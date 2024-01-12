@@ -9,6 +9,8 @@ import {
   UseGuards,
   UseInterceptors,
   ClassSerializerInterceptor,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
@@ -23,7 +25,7 @@ import { User } from 'src/user/entities/user.entity';
 import { GoogleRequest, KakaoRequest } from './interface/auth.interface';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
-import { SigninResDto, SignupResDto } from './dto/res.dto';
+import { RefreshResDto, SigninResDto, SignupResDto } from './dto/res.dto';
 import { SigninReqDto, SignupReqDto } from './dto/req.dto';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 
@@ -48,15 +50,11 @@ export class AuthController {
 
   @Public()
   @Post('auth/refresh')
-  @UseInterceptors(ClassSerializerInterceptor)
   @UseGuards(JwtRefreshGuard)
-  async refresh(@Req() req: any, @Res({ passthrough: true }) res: Response): Promise<void> {
+  async refresh(@Req() req: any, @Res({ passthrough: true }) res: Response): Promise<RefreshResDto> {
     try {
       const user: User = req.user;
-      const { accessToken, ...accessOption } = await this.authService.generateAccessToken(user);
-      res.setHeader('Authorization', `Bearer ${accessToken}`);
-      res.cookie('access_token', accessToken, accessOption);
-      res.send({ user });
+      return await this.authService.refresh(user, res);
     } catch (e) {
       throw new UnauthorizedException('Invalid refresh-token');
     }
@@ -65,18 +63,18 @@ export class AuthController {
   @Public()
   @Post('auth/logout')
   @UseGuards(JwtRefreshGuard)
-  async logOut(@Req() req: any, @Res() res: Response): Promise<void> {
-    await this.userService.removeRefreshToken(req.user.userId);
+  async logout(@Req() req: any, @Res({ passthrough: true }) res: Response): Promise<{ message: string }> {
+    await this.authService.removeRefreshToken(req.user.userId);
 
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
-    res.send({ message: 'logout success' });
+    return { message: 'logout success' };
   }
 
   @UseGuards(RoleGuard)
   @Role(RoleType.USER)
   @Get('auth/profile')
-  getProfile(@Req() req) {
+  getProfile(@Req() req: any) {
     return req.user;
   }
 
