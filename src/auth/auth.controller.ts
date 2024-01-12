@@ -1,22 +1,8 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Res,
-  UnauthorizedException,
-  Req,
-  UseGuards,
-  UseInterceptors,
-  ClassSerializerInterceptor,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, UnauthorizedException, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { UserService } from 'src/user/user.service';
-import { SignInResult } from './interface/sign-in-result.interface';
 import { JwtRefreshGuard } from '../common/guards/jwt-refresh.guard';
 import { RoleGuard } from '../common/guards/role.guard';
 import { Role } from 'src/common/decorator/role.decorator';
@@ -25,20 +11,22 @@ import { User } from 'src/user/entities/user.entity';
 import { GoogleRequest, KakaoRequest } from './interface/auth.interface';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
-import { RefreshResDto, SigninResDto, SignupResDto } from './dto/res.dto';
+import { RefreshResDto, SigninResDto, UserInfoResDto } from './dto/res.dto';
 import { SigninReqDto, SignupReqDto } from './dto/req.dto';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
 
 @ApiTags('Auth')
-@ApiExtraModels(SignupResDto, SigninResDto)
+@ApiExtraModels(UserInfoResDto, SigninResDto, RefreshResDto)
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService, private readonly userService: UserService) {}
 
   @Public()
-  @ApiPostResponse(SignupResDto)
+  @ApiPostResponse(UserInfoResDto)
   @Post('user/signup')
-  async signup(@Body() { id, pw, name, role, email, nickname, photo, provider }: SignupReqDto): Promise<SignupResDto> {
+  async signup(
+    @Body() { id, pw, name, role, email, nickname, photo, provider }: SignupReqDto,
+  ): Promise<UserInfoResDto> {
     return await this.authService.signup(id, pw, name, role, email, nickname, photo, provider);
   }
 
@@ -87,20 +75,19 @@ export class AuthController {
   @Public()
   @Get('auth/google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleLogin(@Req() req: GoogleRequest, @Res({ passthrough: true }) res: Response): Promise<SignInResult> {
+  async googleLogin(@Req() req: GoogleRequest, @Res({ passthrough: true }) res: Response): Promise<UserInfoResDto> {
     return await this.authService.googleLogin(req, res);
   }
 
   @Public()
   @Get('auth/kakao')
   @UseGuards(AuthGuard('kakao'))
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
   async kakaoAuth(@Req() _req: any): Promise<void> {}
 
   @Public()
   @Get('auth/kakao/callback')
   @UseGuards(AuthGuard('kakao'))
-  async kakaoLogin(@Req() req: KakaoRequest, @Res({ passthrough: true }) res: Response): Promise<SignInResult> {
+  async kakaoLogin(@Req() req: KakaoRequest, @Res({ passthrough: true }) res: Response): Promise<UserInfoResDto> {
     return await this.authService.kakaoLogin(req, res);
   }
 }

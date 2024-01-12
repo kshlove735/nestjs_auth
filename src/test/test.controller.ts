@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  HttpException,
-  HttpStatus,
-  Inject,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus, Inject, UnauthorizedException } from '@nestjs/common';
 import { TestService } from './test.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -21,7 +14,7 @@ export class TestController {
     private readonly testService: TestService,
   ) {}
 
-  @Public()
+  // @Public()
   @Get()
   findAll(): string {
     try {

@@ -3,7 +3,7 @@ import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { Provider } from 'src/user/entities/user.entity';
 import { RoleType } from 'src/user/enum/role-type.enum';
 
-export class SignupResDto {
+export class UserInfoResDto {
   @ApiProperty({ required: true })
   userId: number;
 
@@ -26,7 +26,7 @@ export class SignupResDto {
   photo: string;
 
   @ApiProperty({ required: true })
-  provider: Provider = Provider.LOCAL;
+  provider: Provider;
 }
 
 export class SigninResDto {

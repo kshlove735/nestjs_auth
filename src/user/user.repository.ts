@@ -2,7 +2,7 @@ import { CustomRepository } from 'src/common/decorator/custom-repository.decorat
 import { DeepPartial, FindOneOptions, Repository, UpdateResult } from 'typeorm';
 import { User } from './entities/user.entity';
 import { ConflictException, InternalServerErrorException } from '@nestjs/common';
-import { SignupResDto } from 'src/auth/dto/res.dto';
+import { UserInfoResDto } from 'src/auth/dto/res.dto';
 import { SignupReqDto } from 'src/auth/dto/req.dto';
 
 @CustomRepository(User)
@@ -19,7 +19,7 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async createUser(signupReqDto: SignupReqDto): Promise<SignupResDto> {
+  async createUser(signupReqDto: SignupReqDto): Promise<UserInfoResDto> {
     try {
       const { userId, id, name, role, email, nickname, photo, provider } = await this.save(signupReqDto);
       return { userId, id, name, role, email, nickname, photo, provider };

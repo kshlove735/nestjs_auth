@@ -21,7 +21,6 @@ export class JwtAccessAuthGuard implements CanActivate {
     const token: string = this.extractTokenFromHeader(request);
     if (!token) throw new UnauthorizedException();
 
-    console.log('token', token);
     let payload;
     // provider에 따른 토근 유효성 검증
     try {
@@ -42,7 +41,7 @@ export class JwtAccessAuthGuard implements CanActivate {
     // return type === 'Bearer' ? token : undefined
 
     //* cookies로 access token 전달할 때
-    const token = request.cookies['access_token'];
+    const token: string = request.cookies['access_token'];
     return token;
   }
 }

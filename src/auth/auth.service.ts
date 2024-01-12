@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { Provider, User } from 'src/user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
@@ -11,9 +11,8 @@ import { RefreshTokenWithOption } from './interface/refresh-token-with-option.in
 import { GoogleRequest, KakaoRequest } from './interface/auth.interface';
 import { Response } from 'express';
 import { ConflictException } from '@nestjs/common';
-import { SignInResult } from './interface/sign-in-result.interface';
 import { RoleType } from 'src/user/enum/role-type.enum';
-import { RefreshResDto, SigninResDto, SignupResDto } from './dto/res.dto';
+import { RefreshResDto, SigninResDto, UserInfoResDto } from './dto/res.dto';
 import { UpdateResult } from 'typeorm';
 
 @Injectable()
@@ -34,7 +33,7 @@ export class AuthService {
     nickname: string,
     photo: string,
     provider: Provider,
-  ): Promise<SignupResDto> {
+  ): Promise<UserInfoResDto> {
     // 비밀번호 암호화
     const hashedPw: string = await this.encrypt(pw);
 
@@ -73,6 +72,90 @@ export class AuthService {
 
   async removeRefreshToken(userId: number): Promise<void> {
     await this.userRepository.removeRefreshToken(userId);
+  }
+
+  async googleLogin(req: GoogleRequest, res: Response): Promise<UserInfoResDto> {
+    try {
+      const {
+        user: { email, name, photo },
+      } = req;
+
+      const id: string = email;
+      const nickname: string = name;
+
+      // 유저 중복 검사 및 유저 회원 가입
+      const findUser: User = await this.userRepository.findOneOrCreate(
+        { where: { email } },
+        { id, email, name, nickname, photo, provider: Provider.GOOGLE },
+      );
+
+      if (findUser && findUser.provider !== Provider.GOOGLE) {
+        throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
+      }
+
+      // 생성된 구글 유저로부터 accessToken & refreshToken 발급
+      const { accessToken, ...accessOption } = await this.generateAccessToken(findUser);
+      const { refreshToken, ...refreshOption } = await this.generateRefreshToken(findUser);
+      res.setHeader('Authorization', `Bearer ${accessToken}`);
+      res.cookie('access_token', accessToken, accessOption);
+      res.cookie('refresh_token', refreshToken, refreshOption);
+      await this.setCurrentRefreshToken(findUser.userId, refreshToken);
+
+      return {
+        userId: findUser.userId,
+        id: findUser.id,
+        name: findUser.name,
+        role: findUser.role,
+        email: findUser.email,
+        nickname: findUser.nickname,
+        photo: findUser.photo,
+        provider: findUser.provider,
+      };
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async kakaoLogin(req: KakaoRequest, res: Response): Promise<UserInfoResDto> {
+    try {
+      const {
+        user: { email, nickname, photo },
+      } = req;
+
+      const id: string = email;
+      const name: string = nickname;
+
+      // 유저 중복 검사 및 유저 회원 가입
+      const findUser: User = await this.userRepository.findOneOrCreate(
+        { where: { email } },
+        { id, email, name, nickname, photo, provider: Provider.KAKAO },
+      );
+
+      if (findUser && findUser.provider !== Provider.KAKAO) {
+        throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
+      }
+
+      // 생성된 카카오 유저로부터 accessToken & refreshToken 발급
+      const { accessToken, ...accessOption } = await this.generateAccessToken(findUser);
+      const { refreshToken, ...refreshOption } = await this.generateRefreshToken(findUser);
+      res.setHeader('Authorization', `Bearer ${accessToken}`);
+      res.cookie('access_token', accessToken, accessOption);
+      res.cookie('refresh_token', refreshToken, refreshOption);
+      await this.setCurrentRefreshToken(findUser.userId, refreshToken);
+
+      return {
+        userId: findUser.userId,
+        id: findUser.id,
+        name: findUser.name,
+        role: findUser.role,
+        email: findUser.email,
+        nickname: findUser.nickname,
+        photo: findUser.photo,
+        provider: findUser.provider,
+      };
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   private async validateUser(id: string, pw: string): Promise<User> {
@@ -119,81 +202,6 @@ export class AuthService {
       maxAge: Number(this.configService.get('JWT_REFRESH_EXPIRATION_TIME')) * 1000,
     };
   }
-
-  async googleLogin(req: GoogleRequest, res: Response) {
-    try {
-      const {
-        user: { email, name, photo },
-      } = req;
-
-      const id: string = email;
-      const nickname: string = name;
-
-      // 유저 중복 검사 및 유저 회원 가입
-      const findUser = await this.userRepository.findOneOrCreate(
-        { where: { email } },
-        { id, email, name, nickname, photo, provider: Provider.GOOGLE },
-      );
-
-      if (findUser && findUser.provider !== Provider.GOOGLE) {
-        throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
-      }
-
-      // 생성된 구글 유저로부터 accessToken & refreshToken 발급
-      const { accessToken, ...accessOption } = await this.generateAccessToken(findUser);
-      const { refreshToken, ...refreshOption } = await this.generateRefreshToken(findUser);
-      res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
-      res.cookie('access_token', accessToken, accessOption);
-      res.cookie('refresh_token', refreshToken, refreshOption);
-      await this.setCurrentRefreshToken(findUser.userId, refreshToken);
-
-      const result: SignInResult = {
-        message: '로그인 성공',
-        user: findUser,
-      };
-      return result;
-    } catch (error) {
-      throw new Error(error);
-    }
-  }
-
-  async kakaoLogin(req: KakaoRequest, res: Response) {
-    try {
-      const {
-        user: { email, nickname, photo },
-      } = req;
-
-      const id: string = email;
-      const name: string = nickname;
-
-      // 유저 중복 검사 및 유저 회원 가입
-      const findUser = await this.userRepository.findOneOrCreate(
-        { where: { email } },
-        { id, email, name, nickname, photo, provider: Provider.KAKAO },
-      );
-
-      if (findUser && findUser.provider !== Provider.KAKAO) {
-        throw new ConflictException('현재 계정으로 가입한 이메일이 존재합니다.');
-      }
-
-      // 생성된 카카오 유저로부터 accessToken & refreshToken 발급
-      const { accessToken, ...accessOption } = await this.generateAccessToken(findUser);
-      const { refreshToken, ...refreshOption } = await this.generateRefreshToken(findUser);
-      res.setHeader('Authorization', `Bearer ${[accessToken, refreshToken]}`);
-      res.cookie('access_token', accessToken, accessOption);
-      res.cookie('refresh_token', refreshToken, refreshOption);
-      await this.setCurrentRefreshToken(findUser.userId, refreshToken);
-
-      const result: SignInResult = {
-        message: '로그인 성공',
-        user: findUser,
-      };
-      return result;
-    } catch (error) {
-      throw new Error(error);
-    }
-  }
-
   private async encrypt(plainText: string): Promise<string> {
     const salt: string = await bcrypt.genSalt();
     return await bcrypt.hash(plainText, salt);
