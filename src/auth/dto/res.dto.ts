@@ -8,16 +8,13 @@ export class UserInfoResDto {
   userId: number;
 
   @ApiProperty({ required: true })
-  id: string;
+  email: string;
 
   @ApiProperty({ required: true })
   name: string;
 
   @ApiProperty({ required: true })
   role: RoleType = RoleType.USER;
-
-  @ApiProperty({ required: true })
-  email: string;
 
   @ApiProperty({ required: true })
   nickname: string;

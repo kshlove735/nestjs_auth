@@ -26,19 +26,14 @@ import { KakaoStrategy } from 'src/common/strategies/kakao.strategy';
         global: true,
         secret: configService.get('JWT_ACCESS_SECRET'),
         signOptions: {
+          // jwt의  payload의 exp 설정(쿠키의 expires와 다름)
           expiresIn: `${configService.get('JWT_ACCESS_EXPIRATION_TIME')}s`,
         },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    ConfigService,
-    JwtRefreshStrategy,
-    GoogleStrategy,
-    KakaoStrategy,
-  ], //* JwtRefreshStrategy 기억하자
+  providers: [AuthService, ConfigService, JwtRefreshStrategy, GoogleStrategy, KakaoStrategy], //* JwtRefreshStrategy 기억하자
   exports: [AuthService],
 })
 export class AuthModule {}

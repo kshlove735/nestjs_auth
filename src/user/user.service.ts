@@ -7,8 +7,8 @@ import * as bcrypt from 'bcrypt';
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async findUserById(id: string): Promise<User> {
-    return await this.userRepository.findUserById(id);
+  async findUserByEmail(email: string): Promise<User> {
+    return await this.userRepository.findUserByEmail(email);
   }
 
   async getUserIfRefreshTokenMatches(refreshToken: string, userId: number): Promise<User> | null {

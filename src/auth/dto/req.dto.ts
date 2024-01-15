@@ -4,9 +4,9 @@ import { Provider } from 'src/user/entities/user.entity';
 import { RoleType } from 'src/user/enum/role-type.enum';
 
 export class SignupReqDto {
-  @IsString()
-  @ApiProperty({ required: true, example: 'user1' })
-  id: string;
+  @IsEmail()
+  @ApiProperty({ required: true, example: 'kshlove735@gmail.com' })
+  email: string;
 
   @IsString()
   @Matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{6,30}$/)
@@ -21,10 +21,6 @@ export class SignupReqDto {
   @IsEnum(RoleType)
   @ApiPropertyOptional({ example: 'USER' })
   role?: RoleType = RoleType.USER;
-
-  @IsEmail()
-  @ApiProperty({ required: true, example: 'kshlove735@gmail.com' })
-  email: string;
 
   @IsString()
   @ApiProperty({ required: true, example: 'nickname' })
@@ -44,9 +40,9 @@ export class SignupReqDto {
 }
 
 export class SigninReqDto {
-  @IsString()
-  @ApiProperty({ required: true, example: 'user1' })
-  id: string;
+  @IsEmail()
+  @ApiProperty({ required: true, example: 'kshlove735@gmail.com' })
+  email: string;
 
   @IsString()
   @Matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{6,30}$/)

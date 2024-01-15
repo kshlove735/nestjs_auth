@@ -25,7 +25,6 @@ export class AuthService {
   ) {}
 
   async signup(
-    id: string,
     pw: string,
     name: string,
     role: RoleType,
@@ -38,12 +37,12 @@ export class AuthService {
     const hashedPw: string = await this.encrypt(pw);
 
     // User 정보 DB에 저장
-    return await this.userRepository.createUser({ id, pw: hashedPw, name, role, email, nickname, photo, provider });
+    return await this.userRepository.createUser({ pw: hashedPw, name, role, email, nickname, photo, provider });
   }
 
-  async signin(id: string, pw: string, res: Response): Promise<SigninResDto> {
+  async signin(email: string, pw: string, res: Response): Promise<SigninResDto> {
     // DB에 저장된 암호호된 비밀번호와 동일한지 확인
-    const user: User = await this.validateUser(id, pw);
+    const user: User = await this.validateUser(email, pw);
 
     // 토근 생성
     const { accessToken, ...accessOption } = await this.generateAccessToken(user);
@@ -80,13 +79,12 @@ export class AuthService {
         user: { email, name, photo },
       } = req;
 
-      const id: string = email;
       const nickname: string = name;
 
       // 유저 중복 검사 및 유저 회원 가입
       const findUser: User = await this.userRepository.findOneOrCreate(
         { where: { email } },
-        { id, email, name, nickname, photo, provider: Provider.GOOGLE },
+        { email, name, nickname, photo, provider: Provider.GOOGLE },
       );
 
       if (findUser && findUser.provider !== Provider.GOOGLE) {
@@ -103,10 +101,9 @@ export class AuthService {
 
       return {
         userId: findUser.userId,
-        id: findUser.id,
+        email: findUser.email,
         name: findUser.name,
         role: findUser.role,
-        email: findUser.email,
         nickname: findUser.nickname,
         photo: findUser.photo,
         provider: findUser.provider,
@@ -128,7 +125,7 @@ export class AuthService {
       // 유저 중복 검사 및 유저 회원 가입
       const findUser: User = await this.userRepository.findOneOrCreate(
         { where: { email } },
-        { id, email, name, nickname, photo, provider: Provider.KAKAO },
+        { email, name, nickname, photo, provider: Provider.KAKAO },
       );
 
       if (findUser && findUser.provider !== Provider.KAKAO) {
@@ -145,10 +142,9 @@ export class AuthService {
 
       return {
         userId: findUser.userId,
-        id: findUser.id,
+        email: findUser.email,
         name: findUser.name,
         role: findUser.role,
-        email: findUser.email,
         nickname: findUser.nickname,
         photo: findUser.photo,
         provider: findUser.provider,
@@ -158,8 +154,8 @@ export class AuthService {
     }
   }
 
-  private async validateUser(id: string, pw: string): Promise<User> {
-    const user: User = await this.userService.findUserById(id);
+  private async validateUser(email: string, pw: string): Promise<User> {
+    const user: User = await this.userService.findUserByEmail(email);
 
     if (!user) throw new NotFoundException('User not found');
     if (!(await this.validatePw(pw, user.pw))) throw new BadRequestException('Invalid credentials');

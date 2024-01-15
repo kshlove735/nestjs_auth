@@ -21,16 +21,12 @@ export class UserRepository extends Repository<User> {
 
   async createUser(signupReqDto: SignupReqDto): Promise<UserInfoResDto> {
     try {
-      const { userId, id, name, role, email, nickname, photo, provider } = await this.save(signupReqDto);
-      return { userId, id, name, role, email, nickname, photo, provider };
+      const { userId, name, role, email, nickname, photo, provider } = await this.save(signupReqDto);
+      return { userId, name, role, email, nickname, photo, provider };
     } catch (e: any) {
       if (e.code === 'ER_DUP_ENTRY') throw new ConflictException('현재 계정으로 가입한 ID가 존재합니다.');
       else throw new InternalServerErrorException();
     }
-  }
-
-  async findUserById(id: string): Promise<User> {
-    return await this.findOne({ where: { id: id } });
   }
 
   async findUserByEmail(email: string): Promise<User> {

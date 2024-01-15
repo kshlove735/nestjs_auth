@@ -24,16 +24,14 @@ export class AuthController {
   @Public()
   @ApiPostResponse(UserInfoResDto)
   @Post('user/signup')
-  async signup(
-    @Body() { id, pw, name, role, email, nickname, photo, provider }: SignupReqDto,
-  ): Promise<UserInfoResDto> {
-    return await this.authService.signup(id, pw, name, role, email, nickname, photo, provider);
+  async signup(@Body() { pw, name, role, email, nickname, photo, provider }: SignupReqDto): Promise<UserInfoResDto> {
+    return await this.authService.signup(pw, name, role, email, nickname, photo, provider);
   }
 
   @Public()
   @Post('auth/signin')
-  async signin(@Body() { id, pw }: SigninReqDto, @Res({ passthrough: true }) res: Response): Promise<SigninResDto> {
-    return await this.authService.signin(id, pw, res);
+  async signin(@Body() { email, pw }: SigninReqDto, @Res({ passthrough: true }) res: Response): Promise<SigninResDto> {
+    return await this.authService.signin(email, pw, res);
   }
 
   @Public()

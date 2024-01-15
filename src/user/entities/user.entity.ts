@@ -13,8 +13,8 @@ export class User {
   @PrimaryGeneratedColumn()
   userId: number;
 
-  @Column({ unique: true })
-  id: string;
+  @Column({ type: 'varchar', length: 50, unique: true })
+  email: string;
 
   @Column({ type: 'varchar', length: 80, nullable: true })
   pw?: string;
@@ -22,14 +22,11 @@ export class User {
   @Column({ type: 'varchar', length: 50, nullable: true })
   name?: string;
 
+  @Column({ type: 'varchar', length: 50 })
+  nickname?: string;
+
   @Column({ type: 'enum', enum: RoleType, default: RoleType.USER })
   role: RoleType;
-
-  @Column({ type: 'varchar', length: 50, unique: true })
-  email: string;
-
-  @Column({ type: 'varchar', length: 50 })
-  nickname: string;
 
   @Column({ type: 'varchar', length: 80, nullable: true })
   currentRefreshToken?: string;
