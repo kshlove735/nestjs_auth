@@ -12,7 +12,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret: configService.get('GOOGLE_SECRET'),
       // 구글 인증을 마치고 다시 돌아올 주소 입력.
       // 구글 앱을 구성하면서 사용자 인증 정보를 구성할때 입력한 Redirect URI값과 일치해야한다.
-      callbackURL: configService.get('GOOGLE_CALLBACKURL'),
+      callbackURL: configService.get('GOOGLE_CALLBACK_URL'),
       scope: ['email', 'profile'],
     });
   }
