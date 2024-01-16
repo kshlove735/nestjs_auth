@@ -8,12 +8,12 @@ import { RoleGuard } from '../common/guards/role.guard';
 import { Role } from 'src/common/decorator/role.decorator';
 import { RoleType } from 'src/user/enum/role-type.enum';
 import { User } from 'src/user/entities/user.entity';
-import { GoogleRequest, KakaoRequest } from './interface/auth.interface';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { RefreshResDto, SigninResDto, UserInfoResDto } from './dto/res.dto';
 import { SigninReqDto, SignupReqDto } from './dto/req.dto';
 import { ApiPostResponse } from 'src/common/decorator/swagger.decorator';
+import { SocialUser, SocialUserAfterAuth } from './decorator/social-user.decorator';
 
 @ApiTags('Auth')
 @ApiExtraModels(UserInfoResDto, SigninResDto, RefreshResDto)
@@ -24,8 +24,8 @@ export class AuthController {
   @Public()
   @ApiPostResponse(UserInfoResDto)
   @Post('user/signup')
-  async signup(@Body() { pw, name, role, email, nickname, photo, provider }: SignupReqDto): Promise<UserInfoResDto> {
-    return await this.authService.signup(pw, name, role, email, nickname, photo, provider);
+  async signup(@Body() { pw, role, email, nickname, photo, provider }: SignupReqDto): Promise<UserInfoResDto> {
+    return await this.authService.signup(pw, role, email, nickname, photo, provider);
   }
 
   @Public()
@@ -73,8 +73,11 @@ export class AuthController {
   @Public()
   @Get('auth/google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleLogin(@Req() req: GoogleRequest, @Res({ passthrough: true }) res: Response): Promise<UserInfoResDto> {
-    return await this.authService.googleLogin(req, res);
+  async googleLogin(
+    @SocialUser() socialUser: SocialUserAfterAuth,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<UserInfoResDto> {
+    return await this.authService.OAuthLogin(socialUser, res);
   }
 
   @Public()
@@ -85,7 +88,10 @@ export class AuthController {
   @Public()
   @Get('auth/kakao/callback')
   @UseGuards(AuthGuard('kakao'))
-  async kakaoLogin(@Req() req: KakaoRequest, @Res({ passthrough: true }) res: Response): Promise<UserInfoResDto> {
-    return await this.authService.kakaoLogin(req, res);
+  async kakaoLogin(
+    @SocialUser() socialUser: SocialUserAfterAuth,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<UserInfoResDto> {
+    return await this.authService.OAuthLogin(socialUser, res);
   }
 }

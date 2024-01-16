@@ -5,17 +5,13 @@ import { RoleType } from 'src/user/enum/role-type.enum';
 
 export class SignupReqDto {
   @IsEmail()
-  @ApiProperty({ required: true, example: 'kshlove735@gmail.com' })
+  @ApiProperty({ required: true, example: 'kshlove123@gmail.com' })
   email: string;
 
   @IsString()
   @Matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{6,30}$/)
   @ApiProperty({ required: true, example: 'User1!' })
   pw: string;
-
-  @IsString()
-  @ApiProperty({ required: true, example: '김승현' })
-  name: string;
 
   @IsOptional()
   @IsEnum(RoleType)
@@ -41,7 +37,7 @@ export class SignupReqDto {
 
 export class SigninReqDto {
   @IsEmail()
-  @ApiProperty({ required: true, example: 'kshlove735@gmail.com' })
+  @ApiProperty({ required: true, example: 'kshlove123@gmail.com' })
   email: string;
 
   @IsString()

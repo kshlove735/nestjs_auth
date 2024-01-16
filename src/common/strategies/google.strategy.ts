@@ -29,13 +29,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   // 인증을 마치면 user를 구성해 반환하고 인증 오류가 발생하면 error를 전달
   async validate(accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) {
     try {
-      // console.log('accessToken', accessToken);
-      // console.log('refreshToken', refreshToken);
-      const { displayName, emails, photos } = profile;
+      const { displayName, emails, photos, provider } = profile;
       const user = {
         email: emails[0].value,
-        name: displayName,
+        nickname: displayName,
         photo: photos[0].value,
+        provider,
       };
       done(null, user);
     } catch (error) {

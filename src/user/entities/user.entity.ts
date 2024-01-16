@@ -19,9 +19,6 @@ export class User {
   @Column({ type: 'varchar', length: 80, nullable: true })
   pw?: string;
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  name?: string;
-
   @Column({ type: 'varchar', length: 50 })
   nickname?: string;
 

@@ -11,9 +11,6 @@ export class UserInfoResDto {
   email: string;
 
   @ApiProperty({ required: true })
-  name: string;
-
-  @ApiProperty({ required: true })
   role: RoleType = RoleType.USER;
 
   @ApiProperty({ required: true })
